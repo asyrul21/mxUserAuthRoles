@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const SuperAdminSchema = mongoose.Schema(
+const UserSchema = mongoose.Schema(
   {
     email: {
       type: String,
@@ -14,6 +14,10 @@ const SuperAdminSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    userType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserType",
+    },
   },
   {
     timestamps: true,
@@ -21,12 +25,12 @@ const SuperAdminSchema = mongoose.Schema(
 );
 
 // authentication to match password
-SuperAdminSchema.methods.matchPassword = async function (enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(String(enteredPassword), this.password);
 };
 
 // password encryption
-SuperAdminSchema.pre("save", async function (req, res, next) {
+UserSchema.pre("save", async function (req, res, next) {
   try {
     if (!this.isModified("password")) {
       return next();
@@ -41,5 +45,5 @@ SuperAdminSchema.pre("save", async function (req, res, next) {
   }
 });
 
-const SuperAdminModel = mongoose.model("SuperAdmin", SuperAdminSchema);
-module.exports = SuperAdminModel;
+const UserModel = mongoose.model("User", UserSchema);
+module.exports = UserModel;

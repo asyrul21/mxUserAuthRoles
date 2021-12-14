@@ -2,7 +2,10 @@ const express = require("express");
 const dotenv = require("dotenv");
 dotenv.config();
 const morgan = require("morgan");
-const { initializeApplication } = require("./config");
+const { initializeDatabase } = require("./config/database");
+const { initialiseSwissRolls } = require("./config");
+const UserModel = require("./models/User");
+const defaultUserActions = require("./defaultUserActions.json");
 const http = require("http");
 // // event emitter
 const events = require("events");
@@ -21,8 +24,21 @@ if (process.env.NODE_ENV === "development") {
 // body parser
 app.use(express.json());
 
-// initialise
-initializeApplication(process.env.NODE_ENV, EM);
+// initialise User Swiss Rolls
+const superAdminObject = {
+  email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
+  name: process.env.SUPER_ADMIN_NAME,
+  password: process.env.SUPER_ADMIN_PASSWORD,
+};
+initialiseSwissRolls(
+  superAdminObject,
+  UserModel,
+  defaultUserActions.actions,
+  () => {
+    initializeDatabase(process.env.NODE_ENV, EM);
+  }
+);
+
 // root
 app.get("/api/", (req, res) => {
   res.send("User Role Service API is running");

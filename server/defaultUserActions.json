@@ -1,0 +1,8 @@
+{
+  "actions": [
+    {
+      "name": "viewMainApplication",
+      "description": "View home page of application"
+    }
+  ]
+}

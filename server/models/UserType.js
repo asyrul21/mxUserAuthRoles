@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const UserType = mongoose.Schema({
+const UserTypeSchema = mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -11,7 +11,7 @@ const UserType = mongoose.Schema({
   allowedActions: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Action",
+      ref: "UserAction",
     },
   ],
 });
