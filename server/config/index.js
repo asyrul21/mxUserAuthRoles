@@ -42,7 +42,14 @@ const createDefaultUserTypes = async (superAdminAction) => {
   const userTypes = await UserTypeModel.find();
   if (!userTypes || userTypes.length === 0) {
     console.log("No userTypes found. Creating default types...");
-    const newUserTypes = await UserTypeModel.insertMany(defaultUserTypes);
+    const newUserTypes = await UserTypeModel.insertMany([
+      {
+        name: "superAdmin",
+        description: "Application Super or Root Administrator",
+        nonDeletable: true,
+      },
+      ...defaultUserTypes,
+    ]);
     const superAdminType = newUserTypes[0];
     await superAdminType.allowedActions.push(superAdminAction);
     await superAdminType.save();
@@ -72,8 +79,8 @@ const createSuperAdminIfNotExist = async (
         ...superAdminObj,
         userType: superAdminType._id,
       });
-      console.log("New super admin created:");
-      console.log(superAdmin);
+      console.log("New super admin created.");
+      // console.log(superAdmin);
     } else {
       console.log("Super admin already exists.");
     }

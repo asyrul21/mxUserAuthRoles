@@ -1,3 +1,9 @@
+const isUserType = (item) => {
+  item.should.have.property("name");
+  item.should.have.property("allowedActions");
+  item.should.have.property("nonDeletable");
+};
+
 const shouldBeAnErrorObject = (item) => {
   console.log("ERROR MESSAGE:", item.message);
   item.should.have.property("message");
@@ -30,4 +36,5 @@ const assertInternalError = (response) => {
 module.exports = {
   shouldBeAnErrorObject,
   assertInternalError,
+  isUserType,
 };

@@ -40,13 +40,27 @@ describe("User Types Routes", () => {
         },
       });
 
+      const defaultUserTypes = await UserTypeModel.find();
+      // the first index is superAdmin
+      const adminType = defaultUserTypes[1];
+      const genericType = defaultUserTypes[2];
+      const sampleUsers = users.map((user, index) => {
+        if (index === 0) {
+          user.userType = adminType._id;
+        } else {
+          user.userType = genericType._id;
+        }
+        return user;
+      });
       // delete all users except super admin
       await UserModel.deleteMany({
         email: {
           $ne: process.env.SUPER_ADMIN_ID,
         },
       });
-      createdUsers = await UserModel.insertMany(users);
+      createdUsers = await UserModel.insertMany(sampleUsers);
+      //   console.log("Created Users:");
+      //   console.log(createdUsers);
     });
 
     it("should return error when not logged in", async () => {
