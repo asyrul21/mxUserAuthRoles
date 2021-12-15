@@ -2,13 +2,23 @@
 
 A Modular Library to Manage User Roles and their responsibilities. Can be implmented both as an independent service, or together with your app.
 
+# Pre-Requisites
+
+Your app MUST have the following modules installed:
+
+1. Mongoose
+2. Express
+3. jsonwebtoken
+4. express-async-handler
+5. bcryptjs
+
+```bash
+npm install mongoose express jsonwebtoken express-async-handler  mongoose bcryptjs
+```
+
 # Setup
 
-1. Define the following properties in .env:
-
-- MONGO_URI
-
-2. Import `initializeSwissRolls` in your `server.js`.
+1. Import `initializeSwissRolls` in your `server.js`.
 
    `InitializeSwissRolls` must accept FOUR parameters:
 
@@ -39,30 +49,25 @@ A Modular Library to Manage User Roles and their responsibilities. Can be implme
   Sample Client User Model:
 
   ```javascript
-  const UserSchema = mongoose.Schema(
-    {
-      email: {
-        type: String,
-        required: true,
-        unique: true,
-      },
-      password: {
-        type: String,
-        required: true,
-      },
-      // IMPORTANT: Your User Model MUST HAVE THIS PROPERTY!
-      userType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserType",
-      },
+  const UserSchema = mongoose.Schema({
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    {
-      timestamps: true,
-    }
-  );
+    password: {
+      type: String,
+      required: true,
+    },
+    // IMPORTANT: Your User Model MUST HAVE THIS PROPERTY!
+    userType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserType",
+    },
+  });
   ```
 
-- the other parameter is the list of all default userActions. These can be modified later by superAdmin. One suggestion is to put them in a _.json_ file which is later referenced in _serves.js_
+- The list of all default userActions. These can be modified later by superAdmin. One suggestion is to put them in a _.json_ file which is later referenced in _serves.js_
 
   Sample json:
 
@@ -81,7 +86,7 @@ A Modular Library to Manage User Roles and their responsibilities. Can be implme
   }
   ```
 
-- Finally, it takes a callback function that usually runs the Connect to Database code chunk.
+- A callback function that usually runs the Connect to Database code chunk.
 
   Sample initialisation code (server.js):
 
@@ -100,6 +105,7 @@ A Modular Library to Manage User Roles and their responsibilities. Can be implme
     UserModel,
     defaultUserActions.actions,
     () => {
+      // connect to your db here
       initializeDatabase(process.env.NODE_ENV, EM);
     }
   );
@@ -109,34 +115,32 @@ A Modular Library to Manage User Roles and their responsibilities. Can be implme
 
 # Usage using Middlewares
 
-1. Your app must have an Auth Middleware that eventually sets `req.user = verifiedUser` before calling `next()`. You also MUST call mongoose's `.populate("userType")` before assigning. Example:
+_IMPORTANT NOTE_: For this library to work, your app needs to support the following infrastructure:
 
-```javascript
-const requireLogin = asyncHandler(async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await User.findById(decoded.id)
-        .select("-password")
-        .populate("userType"); // IMPORTANT
-      req.user = currentUser; // IMPORTANT
-      return next();
-    } catch (error) {
-      console.error(error);
-      res.status(401);
-      throw new Error("Not authorized, token failed. " + error);
-    }
-  }
-  if (!token) {
-    res.status(401);
-    throw new Error("Not authorized.");
-  }
-});
-```
+- JWT Authorization
+
+  Requests need to have a _header_ with key-value of {"authorization" : "Brearer <JWT token>"}
+
+- Your app should also have a mechanism to create a token. In this method, take note on the _identifier (ID) property_. For example:
+
+  ```javascript
+  const createToken = (id, name, email) => {
+    return jwt.sign(
+      {
+        id,
+        name,
+        email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+  };
+  ```
+
+  In this case, the identifier prop is _id_
+
+1. Setup the requiredLogin method.
 
 2. Use the `mustBeAdmin`, `mustBeSuperAdmin` and, `isAllowedToPerformAction` middlewares in your Routes.

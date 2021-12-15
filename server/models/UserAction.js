@@ -8,6 +8,10 @@ const UserActionSchema = mongoose.Schema({
   description: {
     type: String,
   },
+  nonDeletable: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const UserAction = mongoose.model("UserAction", UserActionSchema);

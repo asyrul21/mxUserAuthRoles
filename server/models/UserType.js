@@ -14,6 +14,10 @@ const UserTypeSchema = mongoose.Schema({
       ref: "UserAction",
     },
   ],
+  nonDeletable: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const UserType = mongoose.model("UserType", UserTypeSchema);

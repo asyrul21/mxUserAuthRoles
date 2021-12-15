@@ -27,6 +27,7 @@ const createDefaultUserActions = async (defaultActions) => {
       {
         name: "superAdminPrivilege",
         description: "Should be able to do everything.",
+        nonDeletable: true,
       },
       ...defaultActions,
     ]);
