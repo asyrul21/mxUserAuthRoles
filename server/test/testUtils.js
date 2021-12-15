@@ -1,3 +1,60 @@
+const chai = require("chai");
+const chaiHttp = require("chai-http");
+const should = chai.should();
+chai.use(chaiHttp);
+
+require("dotenv").config();
+
+const server = require("../serverTest");
+
+const loginAsJohn = async function () {
+  const login = await chai
+    .request(server)
+    .post("/api/userRoles/users/login")
+    .send({
+      email: "john@mail.com",
+      password: 123123,
+    });
+  const loginData = { ...login.body };
+  return loginData;
+};
+
+const loginAsJane = async function () {
+  const login = await chai
+    .request(server)
+    .post("/api/userRoles/users/login")
+    .send({
+      email: "jane@mail.com",
+      password: 123123,
+    });
+  const loginData = { ...login.body };
+  return loginData;
+};
+
+const loginAsAdmin = async () => {
+  const login = await chai
+    .request(server)
+    .post("/api/userRoles/users/login")
+    .send({
+      email: "admin@mail.com",
+      password: 123123,
+    });
+  const loginData = { ...login.body };
+  return loginData;
+};
+
+const loginAsSuperAdmin = async () => {
+  const login = await chai
+    .request(server)
+    .post("/api/userRoles/users/login")
+    .send({
+      email: process.env.SUPER_ADMIN_ID,
+      password: process.env.SUPER_ADMIN_PASSWORD,
+    });
+  const loginData = { ...login.body };
+  return loginData;
+};
+
 const isUserType = (item) => {
   item.should.have.property("name");
   item.should.have.property("allowedActions");
@@ -33,8 +90,19 @@ const assertInternalError = (response) => {
   isErrorResponse(response).should.equal(false);
 };
 
+const isAnUserAction = (item) => {
+  item.should.have.property("name");
+  item.should.have.property("description");
+  item.should.have.property("nonDeletable");
+};
+
 module.exports = {
   shouldBeAnErrorObject,
   assertInternalError,
   isUserType,
+  loginAsJane,
+  loginAsJohn,
+  loginAsAdmin,
+  loginAsSuperAdmin,
+  isAnUserAction,
 };

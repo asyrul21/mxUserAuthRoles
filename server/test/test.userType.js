@@ -9,7 +9,14 @@ const should = chai.should();
 chai.use(chaiHttp);
 
 const server = require("../serverTest");
-const { shouldBeAnErrorObject, assertInternalError } = require("./testUtils");
+const {
+  shouldBeAnErrorObject,
+  assertInternalError,
+  loginAsAdmin,
+  isAnUserAction,
+  loginAsJohn,
+  loginAsSuperAdmin,
+} = require("./testUtils");
 
 // import model
 const UserTypeModel = require("../models/UserType");
@@ -71,6 +78,70 @@ describe("User Types Routes", () => {
       result.should.be.json;
       const data = { ...result.body };
       shouldBeAnErrorObject(data);
+    });
+
+    it("should return error when logged in as generic user", async () => {
+      // login
+      const loginData = await loginAsJohn();
+      //   console.log("Login data:");
+      //   console.log(loginData);
+      var token = loginData.token;
+
+      // get all user types
+      const result = await chai
+        .request(server)
+        .get("/api/userRoles/types")
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should be successful when logged in as admin", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      //   console.log("Login data:");
+      //   console.log(loginData);
+      var token = loginData.token;
+
+      // get all user types
+      const result = await chai
+        .request(server)
+        .get("/api/userRoles/types")
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+      data.map((item) => {
+        isAnUserAction(item);
+      });
+    });
+
+    it("should be successful when logged in as superAdmin", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      //   console.log("Login data:");
+      //   console.log(loginData);
+      var token = loginData.token;
+
+      // get all user types
+      const result = await chai
+        .request(server)
+        .get("/api/userRoles/types")
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+      data.map((item) => {
+        isAnUserAction(item);
+      });
     });
   });
 });

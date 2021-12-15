@@ -40,41 +40,19 @@ initialiseSwissRolls(
 );
 
 // routes
+const UserRoutes = require("./routes/userRoutes");
 const UserTypeRoutes = require("./routes/userTypesRoutes");
 
 // root
 app.get("/api/", (req, res) => {
   res.send("User Role Service API is running");
 });
+app.use("/api/userRoles/users", UserRoutes);
 app.use("/api/userRoles/types", UserTypeRoutes);
 
 // error middlewares
 // app.use(notFound);
-// app.use(errorHandler);
-app.use((req, res, next) => {
-  console.log("RES Status:");
-  console.log(res.status);
-  console.log("third last middleware!");
-  req.shirt = "BLUE";
-  next();
-});
-
-app.use((req, res, next) => {
-  console.log("RES Status:");
-  console.log(res.status);
-  console.log("second last middleware!");
-  console.log("REQ Shirtx:");
-  console.log(req.shirt);
-  next();
-});
-
-app.use((error, req, res, next) => {
-  console.log("Error:");
-  console.log(error);
-  console.log("RES Status:");
-  console.log(res.status);
-  console.log("the last middleware for error handling!");
-});
+app.use(errorHandler);
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
