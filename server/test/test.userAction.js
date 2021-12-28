@@ -40,12 +40,8 @@ describe("User Action Routes", () => {
           $ne: true,
         },
       });
-      // delete all user actions except default
-      await UserActionModel.deleteMany({
-        nonDeletable: {
-          $ne: true,
-        },
-      });
+      // delete all user actions
+      await UserActionModel.deleteMany();
 
       const defaultUserTypes = await UserTypeModel.find();
       // the first index is superAdmin
@@ -152,12 +148,8 @@ describe("User Action Routes", () => {
           $ne: true,
         },
       });
-      // delete all user actions except default
-      await UserActionModel.deleteMany({
-        nonDeletable: {
-          $ne: true,
-        },
-      });
+      // delete all user actions
+      await UserActionModel.deleteMany();
 
       const defaultUserTypes = await UserTypeModel.find();
       // the first index is superAdmin
@@ -306,12 +298,8 @@ describe("User Action Routes", () => {
           $ne: true,
         },
       });
-      // delete all user actions except default
-      await UserActionModel.deleteMany({
-        nonDeletable: {
-          $ne: true,
-        },
-      });
+      // delete all user actions
+      await UserActionModel.deleteMany();
 
       const defaultUserTypes = await UserTypeModel.find();
       // the first index is superAdmin
@@ -471,6 +459,124 @@ describe("User Action Routes", () => {
       data.name = sampleAction2.name;
       data.description = sampleAction2.description;
       data.nonDeletable = true;
+    });
+  });
+
+  describe("DELETE /api/userRoles/actions/:id >> Delete user actions", async () => {
+    let createdUsers;
+    let sampleActions;
+    let sampleAction1;
+    let sampleAction2;
+    beforeEach(async function () {
+      // delete all user types except default
+      await UserTypeModel.deleteMany({
+        nonDeletable: {
+          $ne: true,
+        },
+      });
+      // delete all user actions except default
+      await UserActionModel.deleteMany();
+
+      const defaultUserTypes = await UserTypeModel.find();
+      // the first index is superAdmin
+      const adminType = defaultUserTypes[1];
+      const genericType = defaultUserTypes[2];
+      const sampleUsers = users.map((user, index) => {
+        if (index === 0) {
+          user.userType = adminType._id;
+        } else {
+          user.userType = genericType._id;
+        }
+        return user;
+      });
+      // delete all users except super admin
+      await UserModel.deleteMany({
+        email: {
+          $ne: process.env.SUPER_ADMIN_ID,
+        },
+      });
+      createdUsers = await UserModel.insertMany(sampleUsers);
+
+      // create a few sample actions
+      const action1 = {
+        name: "deleteProduct",
+      };
+      const action2 = {
+        name: "updateProduct",
+        description: "To update an existing product",
+        nonDeletable: true,
+      };
+      sampleActions = await UserActionModel.insertMany([action1, action2]);
+      sampleAction1 = sampleActions[0];
+      sampleAction2 = sampleActions[1];
+    });
+
+    it("should return error when not logged in", async () => {
+      const result = await chai
+        .request(server)
+        .delete(`/api/userRoles/actions/${sampleAction1._id}`);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should return error when logged in as admin", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/userRoles/actions/${sampleAction1._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should be successful when logged in as superAdmin to delete action 1", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/userRoles/actions/${sampleAction1._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+      data.length.should.equal(1);
+
+      isAnUserAction(data[0]);
+      data[0].name = sampleAction2.name;
+      data[0].description = sampleAction2.description;
+      data[0].nonDeletable = sampleAction2.nonDeletable;
+    });
+
+    it("should be successful when logged in as superAdmin to update action 2 which is nonDeletable", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/userRoles/actions/${sampleAction2._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(400);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
     });
   });
 });

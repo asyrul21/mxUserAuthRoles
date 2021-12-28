@@ -4,10 +4,10 @@ const {
   getUserActions,
   createUserAction,
   updateUserAction,
+  deleteUserAction,
 } = require("../controllers/userActionsController");
 const {
   setupRequireLoginMiddleware,
-  mustBeAdmin,
   mustBeSuperAdmin,
 } = require("../middlewares");
 
@@ -24,5 +24,8 @@ router
 router
   .route("/:id")
   .put(requireLoginMiddleware, mustBeSuperAdmin, updateUserAction);
+router
+  .route("/:id")
+  .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteUserAction);
 
 module.exports = router;

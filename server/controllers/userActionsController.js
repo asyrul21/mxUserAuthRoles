@@ -60,12 +60,53 @@ const updateUserAction = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     res.status(400);
-    next(new Error("Failed to retrieve user actions. " + error));
+    next(new Error("Failed to update user actions. " + error));
   }
+};
+
+// only for superAdmins
+const deleteUserAction = async (req, res, next) => {
+  try {
+    const Action = await UserActionModel.findById(req.params.id);
+    if (!Action) {
+      throw "Action not found.";
+    }
+    if (Action.nonDeletable) {
+      throw "This action cannot be deleted.";
+    }
+    await Action.remove();
+    const UserActions = await UserActionModel.find();
+    return res.status(200).json(UserActions);
+  } catch (error) {
+    console.error(error);
+    res.status(400);
+    next(new Error("Failed to delete user action. " + error));
+  }
+};
+
+const deleteManyUserActions = async (req, res, next) => {
+  // todo
+  // try {
+  //   const Action = await UserActionModel.findById(req.params.id);
+  //   if (!Action) {
+  //     throw "Action not found.";
+  //   }
+  //   if (Action.nonDeletable) {
+  //     throw "This action cannot be deleted.";
+  //   }
+  //   await Action.remove();
+  //   UserActions = await UserActionModel.find();
+  //   return res.status(200).json(userActions);
+  // } catch (error) {
+  //   console.error(error);
+  //   res.status(400);
+  //   next(new Error("Failed to delete user action. " + error));
+  // }
 };
 
 module.exports = {
   getUserActions,
   createUserAction,
   updateUserAction,
+  deleteUserAction,
 };
