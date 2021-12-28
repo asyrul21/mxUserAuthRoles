@@ -42,6 +42,7 @@ initialiseSwissRolls(
 // routes
 const UserRoutes = require("./routes/userRoutes");
 const UserTypeRoutes = require("./routes/userTypesRoutes");
+const UserActionRoutes = require("./routes/userActionsRoutes");
 
 // root
 app.get("/api/", (req, res) => {
@@ -49,9 +50,10 @@ app.get("/api/", (req, res) => {
 });
 app.use("/api/userRoles/users", UserRoutes);
 app.use("/api/userRoles/types", UserTypeRoutes);
+app.use("/api/userRoles/actions", UserActionRoutes);
 
 // error middlewares
-// app.use(notFound);
+app.use(notFound);
 app.use(errorHandler);
 
 const server = http.createServer(app);

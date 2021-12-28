@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// CRUD only by superadmin or admin
 const UserTypeSchema = mongoose.Schema({
   name: {
     type: String,

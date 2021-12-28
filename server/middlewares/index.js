@@ -1,8 +1,16 @@
 const jwt = require("jsonwebtoken");
 // middlewares
 const mustBeAdmin = (req, res, next) => {
-  if (req.user && req.user.userType && req.user.userType === "admin") {
-    next();
+  if (req.user && req.user.userType) {
+    if (
+      req.user.userType.name === "admin" ||
+      req.user.userType.name === "superAdmin"
+    ) {
+      next();
+    } else {
+      res.status(401);
+      next(new Error("Not authorized as an admin."));
+    }
   } else {
     res.status(401);
     next(new Error("Not authorized as an admin."));
@@ -10,7 +18,11 @@ const mustBeAdmin = (req, res, next) => {
 };
 
 const mustBeSuperAdmin = (req, res, next) => {
-  if (req.user && req.user.userType && req.user.userType === "superAdmin") {
+  if (
+    req.user &&
+    req.user.userType &&
+    req.user.userType.name === "superAdmin"
+  ) {
     next();
   } else {
     res.status(401);
@@ -29,7 +41,6 @@ const isAllowedToPerformAction = (actionString) => {
   if (hasSuperAdminPrivileges()) {
     next();
   }
-
   if (req.user && req.user.userType && req.user.userType.allowedActions) {
     const actionIndex = req.user.userType.allowedActions
       .map((actionObject) => actionObject.name)

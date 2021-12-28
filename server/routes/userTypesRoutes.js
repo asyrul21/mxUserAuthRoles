@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { getUserTypes } = require("../controllers/userTypesController");
-const { setupRequireLoginMiddleware } = require("../middlewares");
+const { setupRequireLoginMiddleware, mustBeAdmin } = require("../middlewares");
 
 require("dotenv").config();
 const requireLoginMiddleware = setupRequireLoginMiddleware(
@@ -9,6 +9,6 @@ const requireLoginMiddleware = setupRequireLoginMiddleware(
   process.env.JWT_SECRET
 );
 
-router.route("/").get(requireLoginMiddleware, getUserTypes);
+router.route("/").get(requireLoginMiddleware, mustBeAdmin, getUserTypes);
 
 module.exports = router;

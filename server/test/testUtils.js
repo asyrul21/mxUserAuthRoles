@@ -92,7 +92,12 @@ const assertInternalError = (response) => {
 
 const isAnUserAction = (item) => {
   item.should.have.property("name");
-  item.should.have.property("description");
+  item.should.have.property("nonDeletable");
+};
+
+const isAUserType = (item) => {
+  item.should.have.property("name");
+  item.should.have.property("allowedActions");
   item.should.have.property("nonDeletable");
 };
 
@@ -105,4 +110,5 @@ module.exports = {
   loginAsAdmin,
   loginAsSuperAdmin,
   isAnUserAction,
+  isAUserType,
 };
