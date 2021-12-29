@@ -27,9 +27,7 @@ router
   .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteManyUserActions);
 router
   .route("/:id")
-  .put(requireLoginMiddleware, mustBeSuperAdmin, updateUserAction);
-router
-  .route("/:id")
+  .put(requireLoginMiddleware, mustBeSuperAdmin, updateUserAction)
   .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteUserAction);
 
 module.exports = router;

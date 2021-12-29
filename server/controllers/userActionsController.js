@@ -97,7 +97,7 @@ const deleteUserAction = async (req, res, next) => {
 const deleteManyUserActions = async (req, res, next) => {
   try {
     const { actionIds } = req.body;
-    if (actionIds && actionIds.length > 1) {
+    if (actionIds && actionIds.length > 0) {
       for await (let actionId of actionIds) {
         const Action = await UserActionModel.findById(actionId);
         if (Action && !Action.nonDeletable) {
