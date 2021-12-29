@@ -1,4 +1,5 @@
 const UserActionModel = require("../models/UserAction");
+const UserTypeModel = require("../models/UserType");
 
 // to get user actions dont need to me an admin
 // just need to be signed in
@@ -64,6 +65,14 @@ const updateUserAction = async (req, res, next) => {
   }
 };
 
+const removeActionInUserTypes = async (actionId) => {
+  const UserTypes = await UserTypeModel.find();
+  for await (let UserType of UserTypes) {
+    UserType.allowedActions.filter((action) => !action._id.equals(actionId));
+    await UserType.save();
+  }
+};
+
 // only for superAdmins
 const deleteUserAction = async (req, res, next) => {
   try {
@@ -75,6 +84,7 @@ const deleteUserAction = async (req, res, next) => {
       throw "This action cannot be deleted.";
     }
     await Action.remove();
+    await removeActionInUserTypes(req.params.id);
     const UserActions = await UserActionModel.find();
     return res.status(200).json(UserActions);
   } catch (error) {
@@ -85,23 +95,24 @@ const deleteUserAction = async (req, res, next) => {
 };
 
 const deleteManyUserActions = async (req, res, next) => {
-  // todo
-  // try {
-  //   const Action = await UserActionModel.findById(req.params.id);
-  //   if (!Action) {
-  //     throw "Action not found.";
-  //   }
-  //   if (Action.nonDeletable) {
-  //     throw "This action cannot be deleted.";
-  //   }
-  //   await Action.remove();
-  //   UserActions = await UserActionModel.find();
-  //   return res.status(200).json(userActions);
-  // } catch (error) {
-  //   console.error(error);
-  //   res.status(400);
-  //   next(new Error("Failed to delete user action. " + error));
-  // }
+  try {
+    const { actionIds } = req.body;
+    if (actionIds && actionIds.length > 1) {
+      for await (let actionId of actionIds) {
+        const Action = await UserActionModel.findById(actionId);
+        if (Action && !Action.nonDeletable) {
+          await Action.remove();
+          await removeActionInUserTypes(actionId);
+        }
+      }
+    }
+    const UserActions = await UserActionModel.find();
+    return res.status(200).json(UserActions);
+  } catch (error) {
+    console.error(error);
+    res.status(400);
+    next(new Error("Failed to delete user action. " + error));
+  }
 };
 
 module.exports = {
@@ -109,4 +120,5 @@ module.exports = {
   createUserAction,
   updateUserAction,
   deleteUserAction,
+  deleteManyUserActions,
 };

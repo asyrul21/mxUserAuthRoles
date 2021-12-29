@@ -467,6 +467,7 @@ describe("User Action Routes", () => {
     let sampleActions;
     let sampleAction1;
     let sampleAction2;
+    let sampleAction3;
     beforeEach(async function () {
       // delete all user types except default
       await UserTypeModel.deleteMany({
@@ -506,9 +507,17 @@ describe("User Action Routes", () => {
         description: "To update an existing product",
         nonDeletable: true,
       };
-      sampleActions = await UserActionModel.insertMany([action1, action2]);
+      const action3 = {
+        name: "viewProduct",
+      };
+      sampleActions = await UserActionModel.insertMany([
+        action1,
+        action2,
+        action3,
+      ]);
       sampleAction1 = sampleActions[0];
       sampleAction2 = sampleActions[1];
+      sampleAction3 = sampleActions[2];
     });
 
     it("should return error when not logged in", async () => {
@@ -554,7 +563,7 @@ describe("User Action Routes", () => {
       result.should.have.status(200);
       result.should.be.json;
       const data = [...result.body];
-      data.length.should.equal(1);
+      data.length.should.equal(2);
 
       isAnUserAction(data[0]);
       data[0].name = sampleAction2.name;
@@ -562,7 +571,7 @@ describe("User Action Routes", () => {
       data[0].nonDeletable = sampleAction2.nonDeletable;
     });
 
-    it("should be successful when logged in as superAdmin to update action 2 which is nonDeletable", async () => {
+    it("should be successful when logged in as superAdmin to delete action 2 which is nonDeletable", async () => {
       // login
       const loginData = await loginAsSuperAdmin();
       var token = loginData.token;
@@ -577,6 +586,30 @@ describe("User Action Routes", () => {
       result.should.be.json;
       const data = { ...result.body };
       shouldBeAnErrorObject(data);
+    });
+
+    it("should be successful when logged in as superAdmin to delete many actions", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/userRoles/actions/deleteMany`)
+        .send({
+          actionIds: [sampleAction1._id, sampleAction2._id, sampleAction3._id],
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+
+      isAnUserAction(data[0]); // one wont be deleted because its nonDeletable
+      data[0].name = sampleAction2.name;
+      data[0].description = sampleAction2.description;
+      data[0].nonDeletable = sampleAction2.nonDeletable;
     });
   });
 });
