@@ -3,13 +3,18 @@ const dotenv = require("dotenv");
 dotenv.config();
 const morgan = require("morgan");
 const { initializeDatabase } = require("./config/database");
-const { initialiseSwissRolls } = require("./config");
 const UserModel = require("./models/User");
 const defaultUserActions = require("./defaultUserActions.json");
 const http = require("http");
 // // event emitter
 const events = require("events");
 const EM = new events.EventEmitter();
+// User Roles
+const {
+  initialiseSwissRolls,
+  configureUserRolesRoutes,
+  setupRequireLoginMiddleware,
+} = require("./config");
 
 // // middlewares
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
@@ -23,6 +28,13 @@ if (process.env.NODE_ENV === "development") {
 }
 // body parser
 app.use(express.json());
+
+// Your app's user routes setup
+const UserRoutes = require("./routes/userRoutes");
+app.get("/api/", (req, res) => {
+  res.send("User Role Service API is running");
+});
+app.use("/api/userRoles/users", UserRoutes);
 
 // initialise User Swiss Rolls
 const superAdminObject = {
@@ -38,19 +50,11 @@ initialiseSwissRolls(
     initializeDatabase(process.env.NODE_ENV, EM);
   }
 );
-
-// routes
-const UserRoutes = require("./routes/userRoutes");
-const UserTypeRoutes = require("./routes/userTypesRoutes");
-const UserActionRoutes = require("./routes/userActionsRoutes");
-
-// root
-app.get("/api/", (req, res) => {
-  res.send("User Role Service API is running");
-});
-app.use("/api/userRoles/users", UserRoutes);
-app.use("/api/userRoles/types", UserTypeRoutes);
-app.use("/api/userRoles/actions", UserActionRoutes);
+const requireLoginMiddleware = setupRequireLoginMiddleware(
+  UserModel,
+  process.env.JWT_SECRET
+);
+configureUserRolesRoutes(app, requireLoginMiddleware);
 
 // error middlewares
 app.use(notFound);

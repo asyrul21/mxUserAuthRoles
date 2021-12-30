@@ -73,6 +73,14 @@ const updateUserType = async (req, res, next) => {
     if (!UserType) {
       throw "UserType not found.";
     }
+
+    if (UserType.name === "admin") {
+      // only superAdmin can update Admin User Type
+      const requestUser = req.user;
+      if (requestUser.userType.name !== "superAdmin") {
+        throw "Not authorized to update Admin User Type.";
+      }
+    }
     UserType.name = name || UserType.name;
     if (description) {
       UserType.description = description;
@@ -82,6 +90,7 @@ const updateUserType = async (req, res, next) => {
     }
     UserType.allowedActions = allowedActions || UserType.allowedActions; // this is an array
     await UserType.save();
+
     const updatedUserType = await UserTypeModel.findById(userTypeId).populate(
       "allowedActions"
     );

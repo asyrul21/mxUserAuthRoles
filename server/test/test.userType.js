@@ -373,6 +373,7 @@ describe("User Types Routes", () => {
     let sampleAction1;
     let sampleAction2;
     let sampleAction3;
+    let adminType;
     beforeEach(async function () {
       await UserTypeModel.deleteMany({
         nonDeletable: {
@@ -383,7 +384,7 @@ describe("User Types Routes", () => {
       await UserActionModel.deleteMany();
       const defaultUserTypes = await UserTypeModel.find();
       // the first index is superAdmin
-      const adminType = defaultUserTypes[1];
+      adminType = defaultUserTypes[1];
       const genericType = defaultUserTypes[2];
       const sampleUsers = users.map((user, index) => {
         if (index === 0) {
@@ -524,6 +525,59 @@ describe("User Types Routes", () => {
       data.name.should.equal(sampleUserType.name);
       data.description.should.equal(sampleUserType.description);
       data.nonDeletable.should.equal(sampleUserType.nonDeletable);
+
+      const updatedAllowedAction1 = data.allowedActions[0];
+      const updatedAllowedAction2 = data.allowedActions[1];
+
+      updatedAllowedAction1.name.should.equal(sampleAction2.name);
+      updatedAllowedAction1._id.should.equal(sampleAction2._id.toString());
+
+      updatedAllowedAction2.name.should.equal(sampleAction3.name);
+      updatedAllowedAction2._id.should.equal(sampleAction3._id.toString());
+    });
+
+    it("should return error when logged in as admin, but try to update Admin Type allowedActions", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      const updatedAllowedActions = [sampleAction2._id, sampleAction3._id];
+      // get all user types
+      const result = await chai
+        .request(server)
+        .put(`/api/userRoles/types/${adminType._id}`)
+        .send({ allowedActions: updatedAllowedActions })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(400);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should be successful when logged in as superAdmin, try to update Admin Type allowedActions", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const updatedAllowedActions = [sampleAction2._id, sampleAction3._id];
+      // get all user types
+      const result = await chai
+        .request(server)
+        .put(`/api/userRoles/types/${adminType._id}`)
+        .send({ allowedActions: updatedAllowedActions })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = { ...result.body };
+      isAUserType(data);
+
+      data.name.should.equal(adminType.name);
+      data.description.should.equal(adminType.description);
+      data.nonDeletable.should.equal(adminType.nonDeletable);
 
       const updatedAllowedAction1 = data.allowedActions[0];
       const updatedAllowedAction2 = data.allowedActions[1];

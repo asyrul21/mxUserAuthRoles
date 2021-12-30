@@ -7,27 +7,21 @@ const {
   deleteUserAction,
   deleteManyUserActions,
 } = require("../controllers/userActionsController");
-const {
-  setupRequireLoginMiddleware,
-  mustBeSuperAdmin,
-} = require("../middlewares");
+const { mustBeSuperAdmin } = require("../middlewares");
 
-require("dotenv").config();
-const requireLoginMiddleware = setupRequireLoginMiddleware(
-  require("../models/User"),
-  process.env.JWT_SECRET
-);
+const UserActionsRoutes = (requireLoginMiddleware) => {
+  router.route("/").get(requireLoginMiddleware, getUserActions);
+  router
+    .route("/")
+    .post(requireLoginMiddleware, mustBeSuperAdmin, createUserAction);
+  router
+    .route("/deleteMany")
+    .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteManyUserActions);
+  router
+    .route("/:id")
+    .put(requireLoginMiddleware, mustBeSuperAdmin, updateUserAction)
+    .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteUserAction);
+  return router;
+};
 
-router.route("/").get(requireLoginMiddleware, getUserActions);
-router
-  .route("/")
-  .post(requireLoginMiddleware, mustBeSuperAdmin, createUserAction);
-router
-  .route("/deleteMany")
-  .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteManyUserActions);
-router
-  .route("/:id")
-  .put(requireLoginMiddleware, mustBeSuperAdmin, updateUserAction)
-  .delete(requireLoginMiddleware, mustBeSuperAdmin, deleteUserAction);
-
-module.exports = router;
+module.exports = UserActionsRoutes;
