@@ -32,6 +32,10 @@ const configureUserRolesRoutes = (
   app.use(`${routeHandle}/actions`, UserActionRoutes(requireLoginMiddleware));
 };
 
+const connectUserRolesToUserModel = (app, UserModel) => {
+  app.set("clientUserModel", UserModel);
+};
+
 const createDefaultUserActions = async (defaultActions) => {
   const userActions = await UserActionModel.find();
   if (!userActions || userActions.length === 0) {
@@ -141,4 +145,5 @@ module.exports = {
   initialiseSwissRolls,
   configureUserRolesRoutes,
   setupRequireLoginMiddleware,
+  connectUserRolesToUserModel,
 };

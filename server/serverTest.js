@@ -14,6 +14,7 @@ const {
   initialiseSwissRolls,
   configureUserRolesRoutes,
   setupRequireLoginMiddleware,
+  connectUserRolesToUserModel,
 } = require("./config");
 
 // // middlewares
@@ -55,6 +56,7 @@ const requireLoginMiddleware = setupRequireLoginMiddleware(
   process.env.JWT_SECRET
 );
 configureUserRolesRoutes(app, requireLoginMiddleware);
+connectUserRolesToUserModel(app, UserModel);
 
 // error middlewares
 app.use(notFound);

@@ -102,17 +102,19 @@ const updateUserType = async (req, res, next) => {
   }
 };
 
-// const updateClientUserModel = async (UserModel, typeId) => {
-//   const ClientUsers = await UserModel.find();
-//   if (ClientUsers && ClientUsers.length > 1) {
-//     for await (let user of ClientUsers) {
-//       if (user.userType && user.userType.equals(typeId)) {
-//         user.userType = null;
-//         await user.save();
-//       }
-//     }
-//   }
-// };
+// if a User has a UserType which has been deleted,
+// it will fallback to a default type = "Generic"
+const updateClientUserModel = async (UserModel, typeId, defaultType) => {
+  const ClientUsers = await UserModel.find();
+  if (ClientUsers && ClientUsers.length > 1) {
+    for await (let user of ClientUsers) {
+      if (user.userType && user.userType.equals(typeId)) {
+        user.userType = defaultType._id;
+        await user.save();
+      }
+    }
+  }
+};
 
 // only for admin and superAdmin
 // deletion is not recommended as this will cause Ripple Effect to other models
@@ -127,7 +129,12 @@ const deleteUserType = async (req, res, next) => {
       throw "This User Type cannot be deleted.";
     }
     await UserType.remove();
-    // await updateClientUserModel(UserModel, userTypeId);
+    const defaultType = await UserTypeModel.find({ name: "generic" });
+    await updateClientUserModel(
+      req.app.get("clientUserModel"),
+      userTypeId,
+      defaultType
+    );
     const UserTypes = await UserTypeModel.find().populate("allowedActions");
     return res.status(200).json(UserTypes);
   } catch (error) {
@@ -143,10 +150,16 @@ const deleteManyUserTypes = async (req, res, next) => {
   try {
     const { typeIds } = req.body;
     if (typeIds && typeIds.length > 0) {
+      const defaultType = await UserTypeModel.find({ name: "generic" });
       for await (let typeId of typeIds) {
         const Type = await UserTypeModel.findById(typeId);
         if (Type && !Type.nonDeletable) {
           await Type.remove();
+          await updateClientUserModel(
+            req.app.get("clientUserModel"),
+            typeId,
+            defaultType
+          );
         }
       }
     }
