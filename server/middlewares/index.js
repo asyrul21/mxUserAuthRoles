@@ -1,3 +1,5 @@
+const jwt = require("jsonwebtoken");
+// middlewares
 const mustBeAdmin = (req, res, next) => {
   if (req.user && req.user.userType) {
     if (
@@ -56,8 +58,43 @@ const isAllowedToPerformAction = (actionString) => {
   }
 };
 
+// this is function that returns a callback
+// requsts need to have a header with key-value of "authorization" : "Brearer <JWT token>"
+const setupRequireLoginMiddleware =
+  (
+    MongooseUserModel,
+    jwtSecret,
+    jwtIDKey = "id",
+    userPasswordProp = "password"
+  ) =>
+  async (req, res, next) => {
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      try {
+        token = req.headers.authorization.split(" ")[1];
+        const decoded = jwt.verify(token, jwtSecret);
+        const currentUser = await MongooseUserModel.findById(decoded[jwtIDKey])
+          .select(`-${userPasswordProp}`)
+          .populate("userType");
+        req.user = currentUser;
+        return next();
+      } catch (error) {
+        res.status(401);
+        next(Error("Not authorized, token failed. " + error));
+      }
+    }
+    if (!token) {
+      res.status(401);
+      next(Error("Not authorized."));
+    }
+  };
+
 module.exports = {
   mustBeAdmin,
   mustBeSuperAdmin,
   isAllowedToPerformAction,
+  setupRequireLoginMiddleware,
 };

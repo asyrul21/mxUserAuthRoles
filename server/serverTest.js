@@ -10,12 +10,7 @@ const http = require("http");
 const events = require("events");
 const EM = new events.EventEmitter();
 // User Roles
-const {
-  initialiseSwissRolls,
-  configureUserRolesRoutes,
-  setupRequireLoginMiddleware,
-  connectUserRolesToUserModel,
-} = require("./config");
+const { initialiseSwissRolls, connectRoutesAndUserModel } = require("./config");
 
 // // middlewares
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
@@ -51,12 +46,7 @@ initialiseSwissRolls(
     initializeDatabase(process.env.NODE_ENV, EM);
   }
 );
-const requireLoginMiddleware = setupRequireLoginMiddleware(
-  UserModel,
-  process.env.JWT_SECRET
-);
-configureUserRolesRoutes(app, requireLoginMiddleware);
-connectUserRolesToUserModel(app, UserModel);
+connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 
 // error middlewares
 app.use(notFound);
