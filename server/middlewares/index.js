@@ -37,8 +37,9 @@ const hasSuperAdminPrivileges = (req) => {
   return false;
 };
 
-const isAllowedToPerformAction = (actionString) => {
-  if (hasSuperAdminPrivileges()) {
+const isAllowedToPerformAction = (actionString) => (req, res, next) => {
+  console.log(req.user);
+  if (hasSuperAdminPrivileges(req)) {
     next();
   }
   if (req.user && req.user.userType && req.user.userType.allowedActions) {
@@ -78,7 +79,12 @@ const setupRequireLoginMiddleware =
         const decoded = jwt.verify(token, jwtSecret);
         const currentUser = await MongooseUserModel.findById(decoded[jwtIDKey])
           .select(`-${userPasswordProp}`)
-          .populate("userType");
+          .populate({
+            path: "userType",
+            populate: {
+              path: "allowedActions",
+            },
+          });
         req.user = currentUser;
         return next();
       } catch (error) {

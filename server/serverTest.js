@@ -25,12 +25,12 @@ if (process.env.NODE_ENV === "development") {
 // body parser
 app.use(express.json());
 
-// Your app's user routes setup
+// CLIENT's user routes setup
 const UserRoutes = require("./routes/userRoutes");
 app.get("/api/", (req, res) => {
   res.send("User Role Service API is running");
 });
-app.use("/api/userRoles/users", UserRoutes);
+app.use("/api/users", UserRoutes);
 
 // initialise User Swiss Rolls
 const superAdminObject = {

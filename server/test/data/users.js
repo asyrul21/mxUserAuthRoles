@@ -5,12 +5,12 @@ const users = [
   {
     email: "admin@mail.com",
     password: bcrypt.hashSync("123123", 10),
-    // userType: null,
+    userType: null,
   },
   {
     email: "john@mail.com",
     password: bcrypt.hashSync("123123", 10),
-    // userType: null,
+    userType: null,
   },
   {
     email: "jane@mail.com",

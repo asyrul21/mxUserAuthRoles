@@ -8,49 +8,37 @@ require("dotenv").config();
 const server = require("../serverTest");
 
 const loginAsJohn = async function () {
-  const login = await chai
-    .request(server)
-    .post("/api/userRoles/users/login")
-    .send({
-      email: "john@mail.com",
-      password: 123123,
-    });
+  const login = await chai.request(server).post("/api/users/login").send({
+    email: "john@mail.com",
+    password: 123123,
+  });
   const loginData = { ...login.body };
   return loginData;
 };
 
 const loginAsJane = async function () {
-  const login = await chai
-    .request(server)
-    .post("/api/userRoles/users/login")
-    .send({
-      email: "jane@mail.com",
-      password: 123123,
-    });
+  const login = await chai.request(server).post("/api/users/login").send({
+    email: "jane@mail.com",
+    password: 123123,
+  });
   const loginData = { ...login.body };
   return loginData;
 };
 
 const loginAsAdmin = async () => {
-  const login = await chai
-    .request(server)
-    .post("/api/userRoles/users/login")
-    .send({
-      email: "admin@mail.com",
-      password: 123123,
-    });
+  const login = await chai.request(server).post("/api/users/login").send({
+    email: "admin@mail.com",
+    password: 123123,
+  });
   const loginData = { ...login.body };
   return loginData;
 };
 
 const loginAsSuperAdmin = async () => {
-  const login = await chai
-    .request(server)
-    .post("/api/userRoles/users/login")
-    .send({
-      email: process.env.SUPER_ADMIN_ID,
-      password: process.env.SUPER_ADMIN_PASSWORD,
-    });
+  const login = await chai.request(server).post("/api/users/login").send({
+    email: process.env.SUPER_ADMIN_ID,
+    password: process.env.SUPER_ADMIN_PASSWORD,
+  });
   const loginData = { ...login.body };
   return loginData;
 };

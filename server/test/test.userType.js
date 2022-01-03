@@ -820,4 +820,253 @@ describe("User Types Routes", () => {
       allowedActions[0].name.should.equal("deleteProduct");
     });
   });
+
+  describe("INTEGRATION >> Deleted UserType must reflect on a User's fallback type (Generic)", async () => {
+    let createdUsers;
+    let sampleUserTypes;
+    let sampleUserType;
+    let sampleUserType2;
+    let sampleActions;
+    let sampleAction1;
+    let sampleAction2;
+    let sampleAction3;
+    beforeEach(async function () {
+      await UserTypeModel.deleteMany({
+        nonDeletable: {
+          $ne: true,
+        },
+      });
+
+      // create sample actions
+      const action1 = {
+        name: "deleteProduct",
+      };
+      const action2 = {
+        name: "updateProduct",
+        description: "To update an existing product",
+      };
+      const action3 = {
+        name: "viewProduct",
+      };
+      sampleActions = await UserActionModel.insertMany([
+        action1,
+        action2,
+        action3,
+      ]);
+      sampleAction1 = sampleActions[0];
+      sampleAction2 = sampleActions[1];
+      sampleAction3 = sampleActions[2];
+
+      // create sample user type
+      const newUserType1 = {
+        name: "Tester",
+        description: "Any tester that uses the app",
+        allowedActions: [sampleAction1._id, sampleAction2._id],
+      };
+      const newUserType2 = {
+        name: "Maintainer",
+        description: "Any developer that mantains the app",
+        allowedActions: [sampleAction3._id],
+      };
+      await UserTypeModel.insertMany([newUserType1, newUserType2]);
+      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      sampleUserType = sampleUserTypes[sampleUserTypes.length - 2];
+      sampleUserType2 = sampleUserTypes[sampleUserTypes.length - 1];
+
+      // delete all user actions except default
+      await UserActionModel.deleteMany();
+      const defaultUserTypes = await UserTypeModel.find();
+      // the first index is superAdmin
+      const adminType = defaultUserTypes[1];
+      const genericType = defaultUserTypes[2];
+      const sampleUsers = users.map((user, index) => {
+        if (index === 0) {
+          // admin
+          user.userType = adminType._id;
+        } else if (index === 1) {
+          // john
+          user.userType = genericType._id;
+        } else {
+          // jane
+          user.userType = sampleUserType._id; // tester
+        }
+        return user;
+      });
+      // delete all users except super admin
+      await UserModel.deleteMany({
+        email: {
+          $ne: process.env.SUPER_ADMIN_ID,
+        },
+      });
+      await UserModel.insertMany(sampleUsers);
+
+      createdUsers = await UserModel.find().populate("userType");
+      //   console.log("Before test Created Users:");
+      //   console.log(createdUsers);
+    });
+
+    it("should be successful when deleting Tester user type", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      // delete sampleUserType // Tester // should fallback to Generic
+      await chai
+        .request(server)
+        .delete(`/api/userRoles/types/${sampleUserType._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      // grab the updated Users
+      const usersReq = await chai
+        .request(server)
+        .get(`/api/users`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(usersReq);
+      usersReq.should.have.status(200);
+      usersReq.should.be.json;
+      const data = [...usersReq.body];
+
+      const jane = data[data.length - 1];
+      jane.userType.name.should.equal("generic");
+
+      // grab all userTypes
+      const typesReq = await chai
+        .request(server)
+        .get(`/api/userRoles/types`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(typesReq);
+      typesReq.should.have.status(200);
+      const typesData = [...typesReq.body];
+      typesData.map((t) => isAUserType(t));
+      typesData.length.should.equal(3); // 2 (default) + 2 (inserted) - 1 = 3
+    });
+  });
+
+  describe("INTEGRATION >> isAllowedToPerformAction middleware", async () => {
+    let createdUsers;
+    let sampleUserTypes;
+    let sampleGenericUserType;
+    let sampleAdminUserType;
+    let sampleActions;
+    let sampleAction1;
+    let sampleAction2;
+    let sampleAction3;
+    let sampleAction4;
+    let sampleAction5;
+    beforeEach(async function () {
+      await UserTypeModel.deleteMany({
+        nonDeletable: {
+          $ne: true,
+        },
+      });
+
+      // create sample actions
+      const action1 = {
+        name: "deleteProduct",
+      };
+      const action2 = {
+        name: "updateProduct",
+        description: "To update an existing product",
+      };
+      const action3 = {
+        name: "viewProduct",
+      };
+      const action4 = {
+        name: "updateUserProfile",
+      };
+      const action5 = {
+        name: "deleteUser",
+      };
+
+      sampleActions = await UserActionModel.insertMany([
+        action1,
+        action2,
+        action3,
+        action4,
+        action5,
+      ]);
+      sampleAction1 = sampleActions[0];
+      sampleAction2 = sampleActions[1];
+      sampleAction3 = sampleActions[2];
+      sampleAction4 = sampleActions[3]; // for generic
+      sampleAction5 = sampleActions[4]; // for admin/superadmin only
+
+      // create sample user type
+      const newUserType1 = {
+        name: "Tester",
+        description: "Any tester that uses the app",
+        allowedActions: [sampleAction1._id, sampleAction2._id],
+      };
+      const newUserType2 = {
+        name: "Maintainer",
+        description: "Any developer that mantains the app",
+        allowedActions: [sampleAction3._id],
+      };
+      const newUserType3 = {
+        name: "generic",
+        description: "The generic userType for testing purposes",
+        allowedActions: [sampleAction4._id],
+      };
+      const newUserType4 = {
+        name: "admin",
+        description: "The Admin userType for testing purposes",
+        allowedActions: [sampleAction4._id, sampleAction5._id],
+      };
+
+      await UserTypeModel.insertMany([
+        newUserType1,
+        newUserType2,
+        newUserType3,
+        newUserType4,
+      ]);
+      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      sampleGenericUserType = sampleUserTypes[sampleUserTypes.length - 2];
+      sampleAdminUserType = sampleUserTypes[sampleUserTypes.length - 1];
+
+      await UserActionModel.deleteMany();
+      const sampleUsers = users.map((user, index) => {
+        if (index === 0) {
+          // admin
+          user.userType = sampleAdminUserType._id;
+        } else if (index === 1) {
+          // john and jane
+          user.userType = sampleGenericUserType._id;
+        }
+        return user;
+      });
+      // delete all users except super admin
+      await UserModel.deleteMany({
+        email: {
+          $ne: process.env.SUPER_ADMIN_ID,
+        },
+      });
+      createdUsers = await UserModel.insertMany(sampleUsers);
+    });
+
+    it("should be successful when trying to update user profile by an admin", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+      const updatedEmail = "johny@mail.com";
+
+      // delete sampleUserType // Tester // should fallback to Generic
+      const result = await chai
+        .request(server)
+        .put(`/api/users/${John._id}`)
+        .send({
+          email: updatedEmail,
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = { ...result.body };
+      data.email.should.equal(updatedEmail);
+    });
+  });
 });

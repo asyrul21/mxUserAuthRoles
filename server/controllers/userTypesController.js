@@ -105,7 +105,7 @@ const updateUserType = async (req, res, next) => {
 // if a User has a UserType which has been deleted,
 // it will fallback to a default type = "Generic"
 const updateClientUserModel = async (UserModel, typeId, defaultType) => {
-  const ClientUsers = await UserModel.find();
+  const ClientUsers = await UserModel.find().select("-password");
   if (ClientUsers && ClientUsers.length > 1) {
     for await (let user of ClientUsers) {
       if (user.userType && user.userType.equals(typeId)) {
@@ -133,7 +133,7 @@ const deleteUserType = async (req, res, next) => {
     await updateClientUserModel(
       req.app.get("clientUserModel"),
       userTypeId,
-      defaultType
+      defaultType[0]
     );
     const UserTypes = await UserTypeModel.find().populate("allowedActions");
     return res.status(200).json(UserTypes);
@@ -158,7 +158,7 @@ const deleteManyUserTypes = async (req, res, next) => {
           await updateClientUserModel(
             req.app.get("clientUserModel"),
             typeId,
-            defaultType
+            defaultType[0]
           );
         }
       }
