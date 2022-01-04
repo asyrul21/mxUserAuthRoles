@@ -43,7 +43,6 @@ const isAllowedToPerformAction = (actionString) => (req, res, next) => {
   }
   if (req.user && req.user.userType && req.user.userType.allowedActions) {
     const actionIndex = req.user.userType.allowedActions.indexOf(actionString);
-    console.log(`Index: ${actionIndex}`);
     if (actionIndex >= 0) {
       return next();
     } else {
@@ -88,6 +87,7 @@ const setupRequireLoginMiddleware =
         req.user = currentUser;
         return next();
       } catch (error) {
+        console.error(error);
         res.status(401);
         return next(Error("Not authorized, token failed. " + error));
       }

@@ -28,6 +28,7 @@ const getUsers = async (req, res) => {
       .select("-password");
     return res.json(users);
   } catch (error) {
+    console.error(error);
     res.status(400);
     next(new Error("Get all users failed."));
   }
@@ -119,6 +120,7 @@ const signIn = async (req, res, next) => {
       throw "";
     }
   } catch (error) {
+    console.error(error);
     res.status(401);
     next(new Error("Invalid email or password. " + error));
   }

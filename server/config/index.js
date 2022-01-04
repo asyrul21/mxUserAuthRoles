@@ -30,6 +30,7 @@ const connectRoutesAndUserModel = (
 ) => {
   const UserTypeRoutes = require("../routes/userTypesRoutes");
   const UserActionRoutes = require("../routes/userActionsRoutes");
+  const UserVerifyRoutes = require("../routes/userVerifyRoutes");
 
   const requireLoginMiddleware = setupRequireLoginMiddleware(
     UserModel,
@@ -40,6 +41,7 @@ const connectRoutesAndUserModel = (
 
   app.use(`${routeHandle}/types`, UserTypeRoutes(requireLoginMiddleware));
   app.use(`${routeHandle}/actions`, UserActionRoutes(requireLoginMiddleware));
+  app.use(`${routeHandle}/verify`, UserVerifyRoutes(requireLoginMiddleware));
   app.set("clientUserModel", UserModel);
 };
 

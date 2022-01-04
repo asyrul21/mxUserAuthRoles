@@ -11,6 +11,7 @@ const getUserTypes = async (req, res, next) => {
     }).populate("allowedActions");
     return res.status(200).json(userTypes);
   } catch (error) {
+    console.error(error);
     res.status(400);
     next(new Error("Failed to retrieve user types."));
   }
