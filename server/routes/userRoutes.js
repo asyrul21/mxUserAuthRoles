@@ -4,6 +4,7 @@ const {
   signIn,
   getUsers,
   updateUserProfile,
+  deleteUser,
 } = require("../controllers/userController");
 
 const UserModel = require("../models/User");
@@ -23,9 +24,10 @@ router
   .route("/:id")
   .put(
     requireLogin,
-    isAllowedToPerformAction("updateProfile"),
+    isAllowedToPerformAction("updateUserProfile"),
     updateUserProfile
-  );
+  )
+  .delete(requireLogin, isAllowedToPerformAction("deleteUser"), deleteUser);
 router.post("/login", signIn);
 
 module.exports = router;

@@ -18,9 +18,9 @@ npm install mongoose express jsonwebtoken express-async-handler  mongoose bcrypt
 
 # Setup
 
-1. Import `initializeSwissRolls` in your `server.js`.
+1. Import `initialiseUserRolls` in your `server.js`.
 
-   `InitializeSwissRolls` must accept FOUR parameters:
+   `initialiseUserRolls` must accept FOUR parameters:
 
 - Super Admin user properties. This needs to follow your UserModel's requirements. We recommend putting the credentials in `.env` file. Example:
 
@@ -91,7 +91,7 @@ npm install mongoose express jsonwebtoken express-async-handler  mongoose bcrypt
   Sample initialisation code (server.js):
 
   ```javascript
-  const { initialiseSwissRolls } = require("./config");
+  const { initialiseUserRolls } = require("./config");
   const UserModel = require("./models/User");
   const defaultUserActions = require("./defaultUserActions.json");
 
@@ -100,7 +100,7 @@ npm install mongoose express jsonwebtoken express-async-handler  mongoose bcrypt
     email: process.env.SUPER_ADMIN_PASSWORD,
     password: process.env.SUPER_ADMIN_NAME,
   };
-  initialiseSwissRolls(
+  initialiseUserRolls(
     superAdminObject,
     UserModel,
     defaultUserActions.actions,

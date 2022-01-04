@@ -1,6 +1,6 @@
 // setup
 const {
-  initialiseSwissRolls,
+  initialiseUserRolls,
   connectRoutesAndUserModel,
 } = require("./server/config");
 
@@ -13,7 +13,7 @@ const {
 } = require("./server/middlewares");
 
 module.exports = {
-  initialiseSwissRolls,
+  initialiseUserRolls,
   connectRoutesAndUserModel,
   mustBeAdmin,
   mustBeSuperAdmin,

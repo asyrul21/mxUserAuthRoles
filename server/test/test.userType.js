@@ -16,6 +16,7 @@ const {
   isAUserType,
   loginAsJohn,
   loginAsSuperAdmin,
+  loginAsJane,
 } = require("./testUtils");
 
 // import model
@@ -199,7 +200,7 @@ describe("User Types Routes", () => {
       const newUserType = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       // get all user types
       const result = await chai
@@ -221,7 +222,7 @@ describe("User Types Routes", () => {
       const newUserType = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       // get all user types
       const result = await chai
@@ -247,7 +248,7 @@ describe("User Types Routes", () => {
       const newUserType = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       // get all user types
       const result = await chai
@@ -326,7 +327,7 @@ describe("User Types Routes", () => {
       const newUserType = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       await UserTypeModel.create(newUserType);
       sampleUserTypes = await UserTypeModel.find();
@@ -426,10 +427,10 @@ describe("User Types Routes", () => {
       const newUserType = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       await UserTypeModel.create(newUserType);
-      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      sampleUserTypes = await UserTypeModel.find();
       sampleUserType = sampleUserTypes[sampleUserTypes.length - 1];
     });
 
@@ -469,9 +470,7 @@ describe("User Types Routes", () => {
       data.name.should.equal(newName);
       data.description.should.equal(sampleUserType.description);
       data.allowedActions.map((action, index) => {
-        sampleUserType.allowedActions[index]._id
-          .equals(action._id)
-          .should.equal(true);
+        sampleUserType.allowedActions[index].should.equal(action);
       });
       data.nonDeletable.should.equal(sampleUserType.nonDeletable);
     });
@@ -497,9 +496,7 @@ describe("User Types Routes", () => {
       data.name.should.equal(sampleUserType.name);
       data.description.should.equal(updatedDescription);
       data.allowedActions.map((action, index) => {
-        sampleUserType.allowedActions[index]._id
-          .equals(action._id)
-          .should.equal(true);
+        sampleUserType.allowedActions[index].should.equal(action);
       });
       data.nonDeletable.should.equal(sampleUserType.nonDeletable);
     });
@@ -529,11 +526,8 @@ describe("User Types Routes", () => {
       const updatedAllowedAction1 = data.allowedActions[0];
       const updatedAllowedAction2 = data.allowedActions[1];
 
-      updatedAllowedAction1.name.should.equal(sampleAction2.name);
-      updatedAllowedAction1._id.should.equal(sampleAction2._id.toString());
-
-      updatedAllowedAction2.name.should.equal(sampleAction3.name);
-      updatedAllowedAction2._id.should.equal(sampleAction3._id.toString());
+      updatedAllowedAction1.should.equal(sampleAction2.name);
+      updatedAllowedAction2.should.equal(sampleAction3.name);
     });
 
     it("should return error when logged in as admin, but try to update Admin Type allowedActions", async () => {
@@ -541,7 +535,7 @@ describe("User Types Routes", () => {
       const loginData = await loginAsAdmin();
       var token = loginData.token;
 
-      const updatedAllowedActions = [sampleAction2._id, sampleAction3._id];
+      const updatedAllowedActions = [sampleAction2.name, sampleAction3.name];
       // get all user types
       const result = await chai
         .request(server)
@@ -582,11 +576,8 @@ describe("User Types Routes", () => {
       const updatedAllowedAction1 = data.allowedActions[0];
       const updatedAllowedAction2 = data.allowedActions[1];
 
-      updatedAllowedAction1.name.should.equal(sampleAction2.name);
-      updatedAllowedAction1._id.should.equal(sampleAction2._id.toString());
-
-      updatedAllowedAction2.name.should.equal(sampleAction3.name);
-      updatedAllowedAction2._id.should.equal(sampleAction3._id.toString());
+      updatedAllowedAction1.should.equal(sampleAction2.name);
+      updatedAllowedAction2.should.equal(sampleAction3.name);
     });
   });
 
@@ -651,12 +642,12 @@ describe("User Types Routes", () => {
       const newUserType1 = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       const newUserType2 = {
         name: "Maintainer",
         description: "Any developer that mantains the app",
-        allowedActions: [sampleAction3._id],
+        allowedActions: [sampleAction3.name],
       };
       await UserTypeModel.insertMany([newUserType1, newUserType2]);
       sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
@@ -701,7 +692,6 @@ describe("User Types Routes", () => {
       const loginData = await loginAsAdmin();
       var token = loginData.token;
 
-      const updatedAllowedActions = [sampleAction2._id, sampleAction3._id];
       // get all user types
       const result = await chai
         .request(server)
@@ -779,15 +769,15 @@ describe("User Types Routes", () => {
       const newUserType1 = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       const newUserType2 = {
         name: "Maintainer",
         description: "Any developer that mantains the app",
-        allowedActions: [sampleAction3._id],
+        allowedActions: [sampleAction3.name],
       };
       await UserTypeModel.insertMany([newUserType1, newUserType2]);
-      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      sampleUserTypes = await UserTypeModel.find();
       sampleUserType = sampleUserTypes[sampleUserTypes.length - 2];
       sampleUserType2 = sampleUserTypes[sampleUserTypes.length - 1];
     });
@@ -816,8 +806,8 @@ describe("User Types Routes", () => {
 
       const allowedActions = getUserTypeReq.body.allowedActions;
 
-      allowedActions.length.should.equal(1);
-      allowedActions[0].name.should.equal("deleteProduct");
+      allowedActions.length.should.equal(1); // 2 - 1
+      allowedActions[0].should.equal("deleteProduct");
     });
   });
 
@@ -861,12 +851,12 @@ describe("User Types Routes", () => {
       const newUserType1 = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       const newUserType2 = {
         name: "Maintainer",
         description: "Any developer that mantains the app",
-        allowedActions: [sampleAction3._id],
+        allowedActions: [sampleAction3.name],
       };
       await UserTypeModel.insertMany([newUserType1, newUserType2]);
       sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
@@ -997,33 +987,35 @@ describe("User Types Routes", () => {
       const newUserType1 = {
         name: "Tester",
         description: "Any tester that uses the app",
-        allowedActions: [sampleAction1._id, sampleAction2._id],
+        allowedActions: [sampleAction1.name, sampleAction2.name],
       };
       const newUserType2 = {
         name: "Maintainer",
         description: "Any developer that mantains the app",
-        allowedActions: [sampleAction3._id],
+        allowedActions: [sampleAction3.name],
       };
       const newUserType3 = {
         name: "generic",
         description: "The generic userType for testing purposes",
-        allowedActions: [sampleAction4._id],
+        allowedActions: [sampleAction4.name],
       };
       const newUserType4 = {
         name: "admin",
         description: "The Admin userType for testing purposes",
-        allowedActions: [sampleAction4._id, sampleAction5._id],
+        allowedActions: [sampleAction4.name, sampleAction5.name],
       };
 
       await UserTypeModel.insertMany([
         newUserType1,
         newUserType2,
-        newUserType3,
-        newUserType4,
+        newUserType3, // generic for test
+        newUserType4, // admin for test
       ]);
       sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
       sampleGenericUserType = sampleUserTypes[sampleUserTypes.length - 2];
       sampleAdminUserType = sampleUserTypes[sampleUserTypes.length - 1];
+      //   console.log("sample user types");
+      //   console.log(sampleUserTypes);
 
       await UserActionModel.deleteMany();
       const sampleUsers = users.map((user, index) => {
@@ -1031,8 +1023,11 @@ describe("User Types Routes", () => {
           // admin
           user.userType = sampleAdminUserType._id;
         } else if (index === 1) {
-          // john and jane
+          // john
           user.userType = sampleGenericUserType._id;
+        } else if (index === 2) {
+          // jane
+          user.userType = sampleUserTypes[sampleUserTypes.length - 4]; // maintainer
         }
         return user;
       });
@@ -1053,7 +1048,6 @@ describe("User Types Routes", () => {
       const John = createdUsers[1];
       const updatedEmail = "johny@mail.com";
 
-      // delete sampleUserType // Tester // should fallback to Generic
       const result = await chai
         .request(server)
         .put(`/api/users/${John._id}`)
@@ -1067,6 +1061,149 @@ describe("User Types Routes", () => {
       result.should.be.json;
       const data = { ...result.body };
       data.email.should.equal(updatedEmail);
+    });
+
+    it("should be successful when trying to update user profile by a superAdmin", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+      const updatedEmail = "johny@mail.com";
+
+      const result = await chai
+        .request(server)
+        .put(`/api/users/${John._id}`)
+        .send({
+          email: updatedEmail,
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = { ...result.body };
+      data.email.should.equal(updatedEmail);
+    });
+
+    it("should be successful when trying to update user profile by a generic type", async () => {
+      // login
+      const loginData = await loginAsJohn();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+      const updatedEmail = "johny@mail.com";
+
+      const result = await chai
+        .request(server)
+        .put(`/api/users/${John._id}`)
+        .send({
+          email: updatedEmail,
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = { ...result.body };
+      data.email.should.equal(updatedEmail);
+    });
+
+    it("should return error when trying to update user profile by a Tester type", async () => {
+      // login
+      const loginData = await loginAsJane();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+      const updatedEmail = "johny@mail.com";
+
+      const result = await chai
+        .request(server)
+        .put(`/api/users/${John._id}`)
+        .send({
+          email: updatedEmail,
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should be successful when trying to delete user by a superAdmin", async () => {
+      // login
+      const loginData = await loginAsSuperAdmin();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/users/${John._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      result.body.length.should.equal(2); // 3 - 1
+    });
+
+    it("should be successful when trying to delete user by a admin", async () => {
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/users/${John._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      result.body.length.should.equal(2); // 3 - 1
+    });
+
+    it("should return error when trying to delete user by generic type", async () => {
+      // login
+      const loginData = await loginAsJohn();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/users/${John._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
+    });
+
+    it("should return error when trying to delete user by Tester type", async () => {
+      // login
+      const loginData = await loginAsJane();
+      var token = loginData.token;
+
+      const John = createdUsers[1];
+
+      const result = await chai
+        .request(server)
+        .delete(`/api/users/${John._id}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
     });
   });
 });

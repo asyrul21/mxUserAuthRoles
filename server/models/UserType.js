@@ -11,8 +11,7 @@ const UserTypeSchema = mongoose.Schema({
   },
   allowedActions: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "UserAction",
+      type: String,
     },
   ],
   nonDeletable: {

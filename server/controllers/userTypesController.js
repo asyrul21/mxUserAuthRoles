@@ -1,4 +1,6 @@
 const UserTypeModel = require("../models/UserType");
+const mongoose = require("mongoose");
+const UserActionModel = require("../models/UserAction");
 
 const getUserTypes = async (req, res, next) => {
   try {
@@ -14,13 +16,27 @@ const getUserTypes = async (req, res, next) => {
   }
 };
 
+const getAllowedActionsString = async (actions) => {
+  let result = [];
+  if (actions && actions.length > 0) {
+    for await (let action of actions) {
+      if (mongoose.isValidObjectId(action)) {
+        const actionObject = await UserActionModel.findById(action);
+        result.push(actionObject.name);
+      }
+    }
+  }
+  return result;
+};
+
 // only for admin and superAdmin
 const createUserType = async (req, res, next) => {
   try {
     const { name, description, allowedActions, nonDeletable } = req.body;
+    const allowedActionsString = await getAllowedActionsString(allowedActions);
     let newTypeObject = {
       name,
-      allowedActions,
+      allowedActions: allowedActionsString,
     };
     if (description) {
       newTypeObject = {
@@ -50,9 +66,7 @@ const createUserType = async (req, res, next) => {
 const getSingleUserType = async (req, res, next) => {
   try {
     const userTypeId = req.params.id;
-    const UserType = await UserTypeModel.findById(userTypeId).populate(
-      "allowedActions"
-    );
+    const UserType = await UserTypeModel.findById(userTypeId);
     if (!UserType) {
       throw "UserType not found.";
     }
@@ -88,12 +102,12 @@ const updateUserType = async (req, res, next) => {
     if (nonDeletable !== null && nonDeletable !== undefined) {
       UserType.nonDeletable = nonDeletable;
     }
-    UserType.allowedActions = allowedActions || UserType.allowedActions; // this is an array
+    if (allowedActions && allowedActions.length > 0) {
+      UserType.allowedActions = await getAllowedActionsString(allowedActions);
+    }
     await UserType.save();
 
-    const updatedUserType = await UserTypeModel.findById(userTypeId).populate(
-      "allowedActions"
-    );
+    const updatedUserType = await UserTypeModel.findById(userTypeId);
     return res.status(200).json(updatedUserType);
   } catch (error) {
     console.error(error);

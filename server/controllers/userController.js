@@ -1,4 +1,6 @@
 const UserModel = require("../models/User");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const jwt = require("jsonwebtoken");
 const createToken = (id, email) => {
@@ -17,7 +19,11 @@ const createToken = (id, email) => {
 // only for admin/superAdmin
 const getUsers = async (req, res) => {
   try {
-    const users = await UserModel.find()
+    const users = await UserModel.find({
+      email: {
+        $ne: process.env.SUPER_ADMIN_ID,
+      },
+    })
       .populate("userType")
       .select("-password");
     return res.json(users);
@@ -34,7 +40,6 @@ const updateUserProfile = async (req, res) => {
       .select("-password")
       .populate("userType");
     if (User) {
-      console.log(requestEmail);
       User.email = requestEmail || User.email;
       // check if there is password update, check old password matches
       let passwordMatch = false;
@@ -69,7 +74,11 @@ const deleteUser = async (req, res) => {
         throw "This user cannot be deleted.";
       }
       await User.remove();
-      const result = await UserModel.find();
+      const result = await UserModel.find({
+        email: {
+          $ne: process.env.SUPER_ADMIN_ID,
+        },
+      });
       return res.status(200).json(result);
     } else {
       res.status(404);

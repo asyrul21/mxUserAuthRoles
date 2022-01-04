@@ -6,14 +6,14 @@ const mustBeAdmin = (req, res, next) => {
       req.user.userType.name === "admin" ||
       req.user.userType.name === "superAdmin"
     ) {
-      next();
+      return next();
     } else {
       res.status(401);
-      next(new Error("Not authorized as an admin."));
+      return next(new Error("Not authorized as an admin."));
     }
   } else {
     res.status(401);
-    next(new Error("Not authorized as an admin."));
+    return next(new Error("Not authorized as an admin."));
   }
 };
 
@@ -23,39 +23,44 @@ const mustBeSuperAdmin = (req, res, next) => {
     req.user.userType &&
     req.user.userType.name === "superAdmin"
   ) {
-    next();
+    return next();
   } else {
     res.status(401);
-    next(new Error("Not authorized as super admin."));
+    return next(new Error("Not authorized as super admin."));
   }
 };
 
 const hasSuperAdminPrivileges = (req) => {
   if (req.user && req.user.userType && req.user.userType.allowedActions) {
-    return req.user.userType.allowedActions[0].name === "superAdminPrivilege";
+    return req.user.userType.allowedActions[0] === "superAdminPrivilege";
   }
   return false;
 };
 
 const isAllowedToPerformAction = (actionString) => (req, res, next) => {
-  console.log(req.user);
   if (hasSuperAdminPrivileges(req)) {
-    next();
+    return next();
   }
   if (req.user && req.user.userType && req.user.userType.allowedActions) {
-    const actionIndex = req.user.userType.allowedActions
-      .map((actionObject) => actionObject.name)
-      .indexOf(actionString);
-
+    const actionIndex = req.user.userType.allowedActions.indexOf(actionString);
+    console.log(`Index: ${actionIndex}`);
     if (actionIndex >= 0) {
-      next();
+      return next();
     } else {
       res.status(401);
-      next(new Error("Not allowed to perform the specified action."));
+      return next(
+        new Error(
+          "Authorization Error: Not allowed to perform the specified action."
+        )
+      );
     }
   } else {
     res.status(401);
-    next(new Error("Invalid userType."));
+    return next(
+      new Error(
+        "Authorization Error: Not allowed to perform the specified action."
+      )
+    );
   }
 };
 
@@ -79,22 +84,17 @@ const setupRequireLoginMiddleware =
         const decoded = jwt.verify(token, jwtSecret);
         const currentUser = await MongooseUserModel.findById(decoded[jwtIDKey])
           .select(`-${userPasswordProp}`)
-          .populate({
-            path: "userType",
-            populate: {
-              path: "allowedActions",
-            },
-          });
+          .populate("userType");
         req.user = currentUser;
         return next();
       } catch (error) {
         res.status(401);
-        next(Error("Not authorized, token failed. " + error));
+        return next(Error("Not authorized, token failed. " + error));
       }
     }
     if (!token) {
       res.status(401);
-      next(Error("Not authorized."));
+      return next(Error("Not authorized."));
     }
   };
 

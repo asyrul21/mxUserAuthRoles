@@ -65,10 +65,13 @@ const updateUserAction = async (req, res, next) => {
   }
 };
 
-const removeActionInUserTypes = async (actionId) => {
+const removeActionInUserTypes = async (actionName) => {
+  console.log(`User action name: ${actionName}`);
   const UserTypes = await UserTypeModel.find();
   for await (let UserType of UserTypes) {
-    UserType.allowedActions.filter((action) => !action._id.equals(actionId));
+    UserType.allowedActions = UserType.allowedActions.filter(
+      (action) => action !== actionName
+    );
     await UserType.save();
   }
 };
@@ -77,6 +80,7 @@ const removeActionInUserTypes = async (actionId) => {
 const deleteUserAction = async (req, res, next) => {
   try {
     const Action = await UserActionModel.findById(req.params.id);
+    const actionName = Action.name;
     if (!Action) {
       throw "Action not found.";
     }
@@ -84,7 +88,7 @@ const deleteUserAction = async (req, res, next) => {
       throw "This action cannot be deleted.";
     }
     await Action.remove();
-    await removeActionInUserTypes(req.params.id);
+    await removeActionInUserTypes(actionName);
     const UserActions = await UserActionModel.find();
     return res.status(200).json(UserActions);
   } catch (error) {
@@ -100,9 +104,10 @@ const deleteManyUserActions = async (req, res, next) => {
     if (actionIds && actionIds.length > 0) {
       for await (let actionId of actionIds) {
         const Action = await UserActionModel.findById(actionId);
+        const actionName = Action.name;
         if (Action && !Action.nonDeletable) {
           await Action.remove();
-          await removeActionInUserTypes(actionId);
+          await removeActionInUserTypes(actionName);
         }
       }
     }

@@ -3,14 +3,14 @@ const UserActionModel = require("../models/UserAction");
 const defaultUserTypes = require("../constants");
 const { setupRequireLoginMiddleware } = require("../middlewares");
 
-const initialiseSwissRolls = async (
+const initialiseUserRolls = async (
   superAdminObj,
   UserMongooseModel,
   defaultUserActions,
   initialiseDbCb = async () => {}
 ) => {
   await initialiseDbCb();
-  console.log("Initialising User Swiss Rolls...");
+  console.log("Initialising User Rolls...");
   const superAdminActions = await createDefaultUserActions(defaultUserActions);
   const superAdminType = await createDefaultUserTypes(superAdminActions);
   await createSuperAdminIfNotExist(
@@ -75,7 +75,7 @@ const createDefaultUserTypes = async (superAdminAction) => {
       ...defaultUserTypes,
     ]);
     const superAdminType = newUserTypes[0];
-    await superAdminType.allowedActions.push(superAdminAction);
+    await superAdminType.allowedActions.push(superAdminAction.name);
     await superAdminType.save();
     return superAdminType;
   }
@@ -115,6 +115,6 @@ const createSuperAdminIfNotExist = async (
 };
 
 module.exports = {
-  initialiseSwissRolls,
+  initialiseUserRolls,
   connectRoutesAndUserModel,
 };
