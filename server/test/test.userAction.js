@@ -33,6 +33,9 @@ describe("User Action Routes", () => {
 
   describe("GET /api/userRoles/actions", async () => {
     let createdUsers;
+    let sampleUserTypes;
+    let adminUserType;
+    let genericUserType;
     beforeEach(async function () {
       // delete all user types except default
       await UserTypeModel.deleteMany({
@@ -43,15 +46,39 @@ describe("User Action Routes", () => {
       // delete all user actions
       await UserActionModel.deleteMany();
 
-      const defaultUserTypes = await UserTypeModel.find();
-      // the first index is superAdmin
-      const adminType = defaultUserTypes[1];
-      const genericType = defaultUserTypes[2];
+      const action1 = {
+        name: "deleteProduct",
+      };
+      const action2 = {
+        name: "updateProduct",
+        description: "To update an existing product",
+        nonDeletable: true,
+      };
+      sampleActions = await UserActionModel.insertMany([action1, action2]);
+      sampleAction1 = sampleActions[0];
+      sampleAction2 = sampleActions[1];
+
+      const newUserType1 = {
+        name: "generic",
+        description: "The generic userType for testing purposes",
+        allowedActions: [sampleAction1.name],
+      };
+      const newUserType2 = {
+        name: "admin",
+        description: "The Admin userType for testing purposes",
+        allowedActions: [sampleAction1.name, sampleAction2.name],
+      };
+
+      await UserTypeModel.insertMany([newUserType1, newUserType2]);
+      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      genericUserType = sampleUserTypes[sampleUserTypes.length - 2];
+      adminUserType = sampleUserTypes[sampleUserTypes.length - 1];
+
       const sampleUsers = users.map((user, index) => {
         if (index === 0) {
-          user.userType = adminType._id;
+          user.userType = adminUserType._id;
         } else {
-          user.userType = genericType._id;
+          user.userType = genericUserType._id;
         }
         return user;
       });
@@ -136,6 +163,34 @@ describe("User Action Routes", () => {
       data.map((item) => {
         isAnUserAction(item);
       });
+    });
+
+    it("should be successful when logged in as generic user with keyword query", async () => {
+      const paramString = new URLSearchParams({
+        keyword: "update",
+      });
+
+      // login
+      const loginData = await loginAsJohn();
+      //   console.log("Login data:");
+      //   console.log(loginData);
+      var token = loginData.token;
+
+      // get all user types
+      const result = await chai
+        .request(server)
+        .get(`/api/userRoles/actions?${paramString}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+      data.map((item) => {
+        isAnUserAction(item);
+      });
+      data.length.should.equal(1);
+      data[0].name.should.equal("updateProduct");
     });
   });
 

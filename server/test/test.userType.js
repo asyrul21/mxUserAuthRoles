@@ -43,15 +43,39 @@ describe("User Types Routes", () => {
       });
       // delete all user actions except default
       await UserActionModel.deleteMany();
-      const defaultUserTypes = await UserTypeModel.find();
-      // the first index is superAdmin
-      const adminType = defaultUserTypes[1];
-      const genericType = defaultUserTypes[2];
+      const action1 = {
+        name: "deleteProduct",
+      };
+      const action2 = {
+        name: "updateProduct",
+        description: "To update an existing product",
+        nonDeletable: true,
+      };
+      sampleActions = await UserActionModel.insertMany([action1, action2]);
+      sampleAction1 = sampleActions[0];
+      sampleAction2 = sampleActions[1];
+
+      const newUserType1 = {
+        name: "generic",
+        description: "The generic userType for testing purposes",
+        allowedActions: [sampleAction1.name],
+      };
+      const newUserType2 = {
+        name: "admin",
+        description: "The Admin userType for testing purposes",
+        allowedActions: [sampleAction1.name, sampleAction2.name],
+      };
+
+      await UserTypeModel.insertMany([newUserType1, newUserType2]);
+      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      genericUserType = sampleUserTypes[sampleUserTypes.length - 2];
+      adminUserType = sampleUserTypes[sampleUserTypes.length - 1];
+
       const sampleUsers = users.map((user, index) => {
         if (index === 0) {
-          user.userType = adminType._id;
+          user.userType = adminUserType._id;
         } else {
-          user.userType = genericType._id;
+          user.userType = genericUserType._id;
         }
         return user;
       });
@@ -62,8 +86,6 @@ describe("User Types Routes", () => {
         },
       });
       createdUsers = await UserModel.insertMany(sampleUsers);
-      //   console.log("Created Users:");
-      //   console.log(createdUsers);
     });
 
     it("should return error when not logged in", async () => {
@@ -138,6 +160,32 @@ describe("User Types Routes", () => {
       data.map((item) => {
         isAUserType(item);
       });
+    });
+
+    it("should be successful when logged in as admin with query params", async () => {
+      const paramString = new URLSearchParams({
+        keyword: "min",
+      });
+
+      // login
+      const loginData = await loginAsAdmin();
+      var token = loginData.token;
+
+      // get all user types
+      const result = await chai
+        .request(server)
+        .get(`/api/userRoles/types?${paramString}`)
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(200);
+      result.should.be.json;
+      const data = [...result.body];
+      data.map((item) => {
+        isAUserType(item);
+      });
+      data.length.should.equal(2); // non Deletable admin + sampleAdmin
+      data[0].name.should.equal("admin");
     });
   });
 

@@ -1,13 +1,20 @@
 const UserTypeModel = require("../models/UserType");
 const mongoose = require("mongoose");
 const UserActionModel = require("../models/UserAction");
+const { buildKeywordQuery } = require("../utils/queryUtils");
 
 const getUserTypes = async (req, res, next) => {
+  const { keyword } = req.query;
   try {
-    const userTypes = await UserTypeModel.find({
+    const keywordQuery = buildKeywordQuery(["name", "description"], keyword);
+    const queryObject = {
+      ...keywordQuery,
       name: {
         $ne: "superAdmin",
       },
+    };
+    const userTypes = await UserTypeModel.find({
+      ...queryObject,
     }).populate("allowedActions");
     return res.status(200).json(userTypes);
   } catch (error) {

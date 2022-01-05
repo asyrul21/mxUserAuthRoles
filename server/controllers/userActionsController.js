@@ -1,11 +1,14 @@
 const UserActionModel = require("../models/UserAction");
 const UserTypeModel = require("../models/UserType");
+const { buildKeywordQuery } = require("../utils/queryUtils");
 
 // to get user actions dont need to me an admin
 // just need to be signed in
 const getUserActions = async (req, res, next) => {
+  const { keyword } = req.query;
   try {
-    const userActions = await UserActionModel.find();
+    const keywordQuery = buildKeywordQuery(["name", "description"], keyword);
+    const userActions = await UserActionModel.find({ ...keywordQuery });
     return res.status(200).json(userActions);
   } catch (error) {
     console.error(error);
