@@ -9,8 +9,7 @@ Your app MUST have the following modules installed:
 1. Mongoose
 2. Express
 3. jsonwebtoken
-4. express-async-handler
-5. bcryptjs
+4. bcryptjs
 
 ```bash
 npm install mongoose express jsonwebtoken express-async-handler  mongoose bcryptjs
@@ -18,9 +17,11 @@ npm install mongoose express jsonwebtoken express-async-handler  mongoose bcrypt
 
 # Setup
 
-1. Import `initialiseUserRolls` in your `server.js`.
+Import `initialiseUserRolls` and `connectRoutesAndUserModel` in your `server.js`.
 
-   `initialiseUserRolls` must accept FOUR parameters:
+## initialiseUserRoles
+
+`initialiseUserRolls` must accept FOUR parameters:
 
 - Super Admin user properties. This needs to follow your UserModel's requirements. We recommend putting the credentials in `.env` file. Example:
 
@@ -88,28 +89,39 @@ npm install mongoose express jsonwebtoken express-async-handler  mongoose bcrypt
 
 - A callback function that usually runs the Connect to Database code chunk.
 
-  Sample initialisation code (server.js):
+## `connectRoutesAndUserModel`
 
-  ```javascript
-  const { initialiseUserRolls } = require("./config");
-  const UserModel = require("./models/User");
-  const defaultUserActions = require("./defaultUserActions.json");
+Simply pass in your `app`, `UserModel`, and you `JWT Secret` as mandatory parameters.
 
-  const superAdminObject = {
-    email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
-    email: process.env.SUPER_ADMIN_PASSWORD,
-    password: process.env.SUPER_ADMIN_NAME,
-  };
-  initialiseUserRolls(
-    superAdminObject,
-    UserModel,
-    defaultUserActions.actions,
-    () => {
-      // connect to your db here
-      initializeDatabase(process.env.NODE_ENV, EM);
-    }
-  );
-  ```
+Optional parameters:
+
+- routeHandle: Your API route handle for the userRole controllers. Default: "/api/userRoles"
+- jwtIDKey: Your ID Prop used in your JWT's `createToken`. Default: "id",
+- userPasswordProp: The property for User Password fo your User Model. Default = "password"
+
+Sample initialisation code (server.js):
+
+```javascript
+const { initialiseUserRolls } = require("./config");
+const UserModel = require("./models/User");
+const defaultUserActions = require("./defaultUserActions.json");
+
+const superAdminObject = {
+  email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
+  email: process.env.SUPER_ADMIN_PASSWORD,
+  password: process.env.SUPER_ADMIN_NAME,
+};
+initialiseUserRolls(
+  superAdminObject,
+  UserModel,
+  defaultUserActions.actions,
+  () => {
+    // connect to your db here
+    initializeDatabase(process.env.NODE_ENV, EM);
+  }
+);
+connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
+```
 
   <br/>
 
@@ -144,3 +156,91 @@ _IMPORTANT NOTE_: For this library to work, your app needs to support the follow
 1. Setup the requiredLogin method.
 
 2. Use the `mustBeAdmin`, `mustBeSuperAdmin` and, `isAllowedToPerformAction` middlewares in your Routes.
+
+## Example Usage with Client's User Routes
+
+```javascript
+const {
+  mustBeAdmin,
+  mustBeSuperAdmin,
+  isAllowedToPerformAction,
+  setupRequireLoginMiddleware,
+} = require("../middlewares");
+
+// setupRequireLogin
+const requireLogin = setupRequireLoginMiddleware(
+  UserModel,
+  process.env.JWT_SECRET
+);
+
+router.route("/").get(requireLogin, mustBeAdmin, getUsers);
+router
+  .route("/:id")
+  .put(
+    requireLogin,
+    isAllowedToPerformAction("updateUserProfile"),
+    updateUserProfile
+  )
+  .delete(requireLogin, isAllowedToPerformAction("deleteUser"), deleteUser);
+router.post("/login", signIn);
+
+module.exports = router;
+```
+
+# API Routes
+
+Depending on your API Route handle configured above, we will use the default `api/userRoles` for these examples.
+
+## User Actions (only for superAdmins)
+
+1. GET to retrive all Actions:
+
+`api/userRoles/actions`
+
+OR
+
+`api/userRoles?keyword=[somekeyword]`
+
+2. POST to create new Action:
+
+Pass in the body a UserAction object. Schema:
+
+```javascript
+ {
+   name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
+  nonDeletable: {
+    type: Boolean,
+    default: false,
+  }
+ }
+```
+
+`api/userRoles/`
+
+3. PUT to edit Action:
+
+4. DELETE to remove an Action:
+
+5. DELETE MANY to remove Actions:
+
+## User Types
+
+1. GET to retrive all Types:
+
+2. POST to create new Types:
+
+3. PUT to edit Types:
+
+4. DELETE to remove an Types:
+
+5. DELETE MANY to remove Actions:
+
+## Verify User is Allowed to Perform Action
+
+1. GET to retrieve if a LoggedIn user is allowed to perform a list of task:
