@@ -106,9 +106,7 @@ const updateUserType = async (req, res, next) => {
     if (allowedActions && allowedActions.length > 0) {
       UserType.allowedActions = await getAllowedActionsString(allowedActions);
     }
-    await UserType.save();
-
-    const updatedUserType = await UserTypeModel.findById(userTypeId);
+    const updatedUserType = await UserType.save();
     return res.status(200).json(updatedUserType);
   } catch (error) {
     console.error(error);

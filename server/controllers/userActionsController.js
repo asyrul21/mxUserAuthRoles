@@ -40,12 +40,25 @@ const createUserAction = async (req, res, next) => {
   }
 };
 
+// verified using console.log
+const updateUserTypes = async (oldName, newName) => {
+  const UserTypes = await UserTypeModel.find();
+  for await (let UserType of UserTypes) {
+    const indexOfOldActionName = UserType.allowedActions.indexOf(oldName);
+    if (indexOfOldActionName >= 0) {
+      UserType.allowedActions[indexOfOldActionName] = newName;
+      await UserType.save();
+    }
+  }
+};
+
 // only for superAdmins
 const updateUserAction = async (req, res, next) => {
   try {
     const { name, description, nonDeletable } = req.body;
 
     const Action = await UserActionModel.findById(req.params.id);
+    const initialName = Action.name;
     if (!Action) {
       throw "Action not found.";
     }
@@ -57,6 +70,8 @@ const updateUserAction = async (req, res, next) => {
         : Action.nonDeletable;
 
     const updatedAction = await Action.save();
+    // inform UserTypes using this action
+    await updateUserTypes(initialName, updatedAction.name);
     return res.status(200).json(updatedAction);
   } catch (error) {
     console.error(error);
@@ -66,7 +81,6 @@ const updateUserAction = async (req, res, next) => {
 };
 
 const removeActionInUserTypes = async (actionName) => {
-  console.log(`User action name: ${actionName}`);
   const UserTypes = await UserTypeModel.find();
   for await (let UserType of UserTypes) {
     UserType.allowedActions = UserType.allowedActions.filter(

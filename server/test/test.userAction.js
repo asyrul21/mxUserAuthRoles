@@ -288,6 +288,8 @@ describe("User Action Routes", () => {
 
   describe("PUT /api/userRoles/actions/:id >> Update user actions", async () => {
     let createdUsers;
+    let adminUserType;
+    let genericUserType;
     let sampleActions;
     let sampleAction1;
     let sampleAction2;
@@ -300,27 +302,6 @@ describe("User Action Routes", () => {
       });
       // delete all user actions
       await UserActionModel.deleteMany();
-
-      const defaultUserTypes = await UserTypeModel.find();
-      // the first index is superAdmin
-      const adminType = defaultUserTypes[1];
-      const genericType = defaultUserTypes[2];
-      const sampleUsers = users.map((user, index) => {
-        if (index === 0) {
-          user.userType = adminType._id;
-        } else {
-          user.userType = genericType._id;
-        }
-        return user;
-      });
-      // delete all users except super admin
-      await UserModel.deleteMany({
-        email: {
-          $ne: process.env.SUPER_ADMIN_ID,
-        },
-      });
-      createdUsers = await UserModel.insertMany(sampleUsers);
-
       // create a few sample actions
       const action1 = {
         name: "deleteProduct",
@@ -333,6 +314,22 @@ describe("User Action Routes", () => {
       sampleActions = await UserActionModel.insertMany([action1, action2]);
       sampleAction1 = sampleActions[0];
       sampleAction2 = sampleActions[1];
+
+      const newUserType1 = {
+        name: "generic",
+        description: "The generic userType for testing purposes",
+        allowedActions: [sampleAction1.name],
+      };
+      const newUserType2 = {
+        name: "admin",
+        description: "The Admin userType for testing purposes",
+        allowedActions: [sampleAction1.name, sampleAction2.name],
+      };
+
+      await UserTypeModel.insertMany([newUserType1, newUserType2]);
+      sampleUserTypes = await UserTypeModel.find().populate("allowedActions");
+      genericUserType = sampleUserTypes[sampleUserTypes.length - 2];
+      adminUserType = sampleUserTypes[sampleUserTypes.length - 1];
     });
 
     it("should return error when not logged in", async () => {
