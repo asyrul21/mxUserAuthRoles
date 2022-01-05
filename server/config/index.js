@@ -11,8 +11,9 @@ const initialiseUserRolls = async (
 ) => {
   await initialiseDbCb();
   console.log("Initialising User Rolls...");
-  const superAdminActions = await createDefaultUserActions(defaultUserActions);
-  const superAdminType = await createDefaultUserTypes(superAdminActions);
+  const createdUserActions = await createDefaultUserActions(defaultUserActions);
+  const createdUserTypes = await createDefaultUserTypes(createdUserActions);
+  const superAdminType = createdUserTypes[0];
   await createSuperAdminIfNotExist(
     superAdminObj,
     UserMongooseModel,
@@ -57,14 +58,15 @@ const createDefaultUserActions = async (defaultActions) => {
       },
       ...defaultActions,
     ]);
-    const superAdminAction = savedActions[0];
-    return superAdminAction;
+    return savedActions;
   }
   console.log("userActions already exist.");
-  return null;
+  return userActions;
 };
 
-const createDefaultUserTypes = async (superAdminAction) => {
+const createDefaultUserTypes = async (createdUserActions) => {
+  const superAdminAction = createdUserActions[0];
+  const otherActions = createdUserActions.slice(1);
   const userTypes = await UserTypeModel.find();
   if (!userTypes || userTypes.length === 0) {
     console.log("No userTypes found. Creating default types...");
@@ -73,16 +75,19 @@ const createDefaultUserTypes = async (superAdminAction) => {
         name: "superAdmin",
         description: "Application Super or Root Administrator",
         nonDeletable: true,
+        allowedActions: [superAdminAction.name],
       },
-      ...defaultUserTypes,
+      {
+        ...defaultUserTypes[0], //admin
+        // by default admins can perform all actions
+        allowedActions: otherActions.map((a) => a.name),
+      },
+      ...defaultUserTypes.slice(1),
     ]);
-    const superAdminType = newUserTypes[0];
-    await superAdminType.allowedActions.push(superAdminAction.name);
-    await superAdminType.save();
-    return superAdminType;
+    return newUserTypes;
   }
   console.log("userTypes already exist.");
-  return null;
+  return userTypes;
 };
 
 const createSuperAdminIfNotExist = async (
