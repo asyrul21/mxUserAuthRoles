@@ -42,9 +42,11 @@ Your app MUST have the following modules installed:
 2. Express
 3. jsonwebtoken
 4. bcryptjs
+5. morgan
+6. dotenv
 
 ```bash
-npm install mongoose express jsonwebtoken mongoose bcryptjs
+npm install mxuserauthroles mongoose express jsonwebtoken mongoose bcryptjs morgan dotenv
 ```
 
 Your app also needs to support the following infrastructure:
@@ -78,6 +80,13 @@ Your app also needs to support the following infrastructure:
 # Setup
 
 Import `initialiseUserAuthRoles` and `connectRoutesAndUserModel` in your `server.js`.
+
+```javascript
+const {
+  initialiseUserAuthRoles,
+  connectRoutesAndUserModel,
+} = require("mxuserauthroles");
+```
 
 ## initialiseUserAuthRoles
 
@@ -208,7 +217,7 @@ Optional parameters:
 const {
   initialiseUserAuthRoles,
   connectRoutesAndUserModel,
-} = require("./config");
+} = require("mxuserauthroles");
 const UserModel = require("./models/User");
 const defaultUserActions = require("./defaultUserActions.json");
 
@@ -238,7 +247,19 @@ connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 
 # Sample Usage with Middlewares to Protect Routes
 
-1. Setup the requiredLogin method.
+1. Import middlewares in your routes:
+
+```javascript
+const {
+  mustBeAdmin,
+  mustBeSuperAdmin,
+  isAllowedToPerformAction,
+  setupRequireLoginMiddleware,
+  isProfileOwner,
+} = require("mxuserauthroles");
+```
+
+2. Setup the requiredLogin method.
 
    ```javascript
    // setupRequireLogin
@@ -248,7 +269,7 @@ connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
    );
    ```
 
-2. These middlewares can be used in your routes:
+3. These middlewares can be used in your routes:
 
 - the set up `requiredLogin` in (1)
 - `mustBeAdmin`
@@ -264,7 +285,8 @@ const {
   mustBeSuperAdmin,
   isAllowedToPerformAction,
   setupRequireLoginMiddleware,
-} = require("../middlewares");
+  isProfileOwner,
+} = require("mxuserauthroles");
 
 const requireLogin = setupRequireLoginMiddleware(
   UserModel,

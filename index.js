@@ -20,4 +20,5 @@ module.exports = {
   mustBeSuperAdmin,
   setupRequireLoginMiddleware,
   isAllowedToPerformAction,
+  isProfileOwner,
 };
