@@ -1,11 +1,16 @@
 const jwt = require("jsonwebtoken");
+
+const isAdminOrSuperAdmin = (req) => {
+  return (
+    req.user.userType.name === "admin" ||
+    req.user.userType.name === "superAdmin"
+  );
+};
+
 // middlewares
 const mustBeAdmin = (req, res, next) => {
   if (req.user && req.user.userType) {
-    if (
-      req.user.userType.name === "admin" ||
-      req.user.userType.name === "superAdmin"
-    ) {
+    if (isAdminOrSuperAdmin(req)) {
       return next();
     } else {
       res.status(401);
@@ -63,6 +68,52 @@ const isAllowedToPerformAction = (actionString) => (req, res, next) => {
   }
 };
 
+const isProfileOwner = async (req, res, next) => {
+  const ClientUserModel = req.app.get("clientUserModel");
+  const reqUserId = req.user._id;
+  const reqParamsId = req.params.id;
+  if (!reqParamsId) {
+    res.status(400);
+    return next(
+      new Error("Route not supported by the isProfileOwner middleware.")
+    );
+  }
+  if (!req.user || !reqUserId) {
+    res.status(401);
+    return next(new Error("Not authorized."));
+  }
+  if (req.user && req.user.userType) {
+    if (isAdminOrSuperAdmin(req)) {
+      return next();
+    }
+  }
+  try {
+    const UserProfile = await ClientUserModel.findById(reqUserId);
+    if (!UserProfile) {
+      res.status(400);
+      return next(new Error("Checking profile ownership failed."));
+    }
+    if (UserProfile._id.equals(reqParamsId)) {
+      return next();
+    } else {
+      res.status(401);
+      return next(
+        new Error(
+          "Authorization Error: Not allowed to perform the specified action."
+        )
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(401);
+    return next(
+      new Error(
+        "Authorization Error: Not allowed to perform the specified action."
+      )
+    );
+  }
+};
+
 // this is function that returns a callback
 // requsts need to have a header with key-value of "authorization" : "Brearer <JWT token>"
 const setupRequireLoginMiddleware =
@@ -101,6 +152,7 @@ const setupRequireLoginMiddleware =
 module.exports = {
   mustBeAdmin,
   mustBeSuperAdmin,
+  isProfileOwner,
   isAllowedToPerformAction,
   setupRequireLoginMiddleware,
 };

@@ -10,7 +10,10 @@ const http = require("http");
 const events = require("events");
 const EM = new events.EventEmitter();
 // User Roles
-const { initialiseUserRolls, connectRoutesAndUserModel } = require("./config");
+const {
+  initialiseUserAuthRoles,
+  connectRoutesAndUserModel,
+} = require("./config");
 
 // // middlewares
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
@@ -32,20 +35,15 @@ app.get("/api/", (req, res) => {
 });
 app.use("/api/users", UserRoutes);
 
-// initialise User Rolls
+// initialise User Roles
 const superAdminObject = {
   email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
   name: process.env.SUPER_ADMIN_NAME,
   password: process.env.SUPER_ADMIN_PASSWORD,
 };
-initialiseUserRolls(
-  superAdminObject,
-  UserModel,
-  defaultUserActions.actions,
-  () => {
-    initializeDatabase(process.env.NODE_ENV, EM);
-  }
-);
+initialiseUserAuthRoles(superAdminObject, UserModel, defaultUserActions, () => {
+  initializeDatabase(process.env.NODE_ENV, EM);
+});
 connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 
 // error middlewares

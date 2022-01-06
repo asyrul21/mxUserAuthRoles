@@ -982,7 +982,7 @@ describe("User Types Routes", () => {
     });
   });
 
-  describe("INTEGRATION >> isAllowedToPerformAction middleware", async () => {
+  describe("INTEGRATION >> isAllowedToPerformAction and isProfileOwner middlewares", async () => {
     let createdUsers;
     let sampleUserTypes;
     let sampleGenericUserType;
@@ -1155,6 +1155,29 @@ describe("User Types Routes", () => {
       result.should.be.json;
       const data = { ...result.body };
       data.email.should.equal(updatedEmail);
+    });
+
+    it("should be successful when trying to update user profile by a Generic type that does not own the profile", async () => {
+      // login
+      const loginData = await loginAsJohn();
+      var token = loginData.token;
+
+      const Jane = createdUsers[2];
+      const updatedEmail = "janey@mail.com";
+
+      const result = await chai
+        .request(server)
+        .put(`/api/users/${Jane._id}`)
+        .send({
+          email: updatedEmail,
+        })
+        .set("Authorization", "Bearer " + token);
+
+      assertInternalError(result);
+      result.should.have.status(401);
+      result.should.be.json;
+      const data = { ...result.body };
+      shouldBeAnErrorObject(data);
     });
 
     it("should return error when trying to update user profile by a Tester type", async () => {

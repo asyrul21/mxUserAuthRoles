@@ -3,15 +3,17 @@ const UserActionModel = require("../models/UserAction");
 const defaultUserTypes = require("../constants");
 const { setupRequireLoginMiddleware } = require("../middlewares");
 
-const initialiseUserRolls = async (
+const initialiseUserAuthRoles = async (
   superAdminObj,
   UserMongooseModel,
   defaultUserActions,
   initialiseDbCb = async () => {}
 ) => {
   await initialiseDbCb();
-  console.log("Initialising User Rolls...");
-  const createdUserActions = await createDefaultUserActions(defaultUserActions);
+  console.log("Initialising User Auth Roles...");
+  const createdUserActions = await createOrUpdateUserActions(
+    defaultUserActions.actions
+  );
   const createdUserTypes = await createDefaultUserTypes(createdUserActions);
   const superAdminType = createdUserTypes[0];
   await createSuperAdminIfNotExist(
@@ -46,7 +48,7 @@ const connectRoutesAndUserModel = (
   app.set("clientUserModel", UserModel);
 };
 
-const createDefaultUserActions = async (defaultActions) => {
+const createOrUpdateUserActions = async (defaultActions) => {
   const userActions = await UserActionModel.find();
   if (!userActions || userActions.length === 0) {
     console.log("No userActions found. Creating default actions...");
@@ -122,6 +124,6 @@ const createSuperAdminIfNotExist = async (
 };
 
 module.exports = {
-  initialiseUserRolls,
+  initialiseUserAuthRoles,
   connectRoutesAndUserModel,
 };

@@ -1,6 +1,6 @@
 // setup
 const {
-  initialiseUserRolls,
+  initialiseUserAuthRoles,
   connectRoutesAndUserModel,
 } = require("./server/config");
 
@@ -10,10 +10,11 @@ const {
   mustBeSuperAdmin,
   setupRequireLoginMiddleware,
   isAllowedToPerformAction,
+  isProfileOwner,
 } = require("./server/middlewares");
 
 module.exports = {
-  initialiseUserRolls,
+  initialiseUserAuthRoles,
   connectRoutesAndUserModel,
   mustBeAdmin,
   mustBeSuperAdmin,

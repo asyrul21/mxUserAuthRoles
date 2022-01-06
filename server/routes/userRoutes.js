@@ -13,6 +13,7 @@ const {
   mustBeSuperAdmin,
   isAllowedToPerformAction,
   setupRequireLoginMiddleware,
+  isProfileOwner,
 } = require("../middlewares");
 
 const requireLogin = setupRequireLoginMiddleware(
@@ -25,6 +26,7 @@ router
   .put(
     requireLogin,
     isAllowedToPerformAction("updateUserProfile"),
+    isProfileOwner,
     updateUserProfile
   )
   .delete(requireLogin, isAllowedToPerformAction("deleteUser"), deleteUser);
