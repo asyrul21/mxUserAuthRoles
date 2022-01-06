@@ -1,6 +1,6 @@
 {
   "name": "mxuserauthroles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A generic and modular approach to managing different user types and responsibilities.",
   "main": "index.js",
   "scripts": {
