@@ -1,12 +1,12 @@
 {
-  "name": "userrolemanagement",
+  "name": "mxuserauthroles",
   "version": "1.0.0",
   "description": "A generic and modular approach to managing different user types and responsibilities.",
   "main": "index.js",
   "scripts": {
     "test-single": "mocha src/test/test.single.js --timeout 5000",
     "test": "mocha server/test --recursive --timeout 5000",
-    "server": "nodemon server/serverTest",
+    "server": "nodemon server/serverTest.js",
     "client": "npm start --prefix client",
     "dev": "npm run server"
   },

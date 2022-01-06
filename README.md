@@ -79,7 +79,7 @@ Import `initialiseUserAuthRoles` and `connectRoutesAndUserModel` in your `server
 
 ## initialiseUserAuthRoles
 
-`initialiseUserAuthRoles` must accept FOUR parameters:
+`initialiseUserAuthRoles` must accept FOUR mandatory parameters and ONE optional:
 
 1. Super Admin user properties. This needs to follow your UserModel's requirements. We recommend putting the credentials in `.env` file. Example:
 
@@ -147,6 +147,32 @@ Import `initialiseUserAuthRoles` and `connectRoutesAndUserModel` in your `server
 
 4. A callback function that usually runs the Connect to Database code chunk.
 
+5. An Optional EventEmitter object, that is used to inform top-level application that initialisation is ready. If you do decide to pass an event parameter, you may listen to the event `initializationDone`
+
+   ```javascript
+   const events = require("events");
+   const EM = new events.EventEmitter();
+
+   const server = http.createServer(app);
+   const PORT = process.env.PORT || 5000;
+   module.exports =
+     process.env.NODE_ENV === "test"
+       ? server.listen(
+           PORT,
+           console.log(
+             `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+           )
+         )
+       : // wait for the database is loaded before starting listening
+         EM.on("initializationDone", () => {
+           server.listen(PORT, () => {
+             console.log(
+               `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+             );
+           });
+         });
+   ```
+
 ## `connectRoutesAndUserModel`
 
 `connectRoutesAndUserModel` takes three mandatory parameters:
@@ -184,14 +210,27 @@ const {
 const UserModel = require("./models/User");
 const defaultUserActions = require("./defaultUserActions.json");
 
+// event emitter
+const events = require("events");
+const EM = new events.EventEmitter();
+
+// express
+const app = express();
+
 const superAdminObject = {
   email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
   email: process.env.SUPER_ADMIN_PASSWORD,
   password: process.env.SUPER_ADMIN_NAME,
 };
-initialiseUserAuthRoles(superAdminObject, UserModel, defaultUserActions, () => {
-  initializeDatabase(process.env.NODE_ENV, EM);
-});
+initialiseUserAuthRoles(
+  superAdminObject,
+  UserModel,
+  defaultUserActions,
+  () => {
+    initializeDatabase(process.env.NODE_ENV);
+  },
+  EM
+);
 connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 ```
 
@@ -296,6 +335,15 @@ Depending on your API Route handle configured above, we will use the default `ap
    }
    ```
 
+   Example request body:
+
+   ```javascript
+   {
+      name: "newAction",
+      description: "Some new action",
+   }
+   ```
+
 3. PUT to edit Action:
 
    PUT `api/userRoles/actions/:id`
@@ -338,7 +386,7 @@ Depending on your API Route handle configured above, we will use the default `ap
 
    POST `api/userRoles/types`
 
-   Pass in the Request Body a UserAction object. Schema:
+   Pass in the Request Body a UserAction object. To add _allowedActions_ during creation of User Type, you need to pass a list/array of Action Object IDs. Schema:
 
    ```javascript
    name: {
@@ -350,13 +398,23 @@ Depending on your API Route handle configured above, we will use the default `ap
    },
    allowedActions: [
     {
-      type: String,
+      type: String, // must be valid Mongoose ID's. Endpoint will get the name of the Action and push in this array.
     },
    ],
    nonDeletable: {
     type: Boolean,
     default: false,
-   },
+   }
+   ```
+
+   Example request body:
+
+   ```javascript
+   {
+      name: "newTypeName",
+      description: "Some new type",
+      allowedActions: ["123", "234", "456"],
+   }
    ```
 
 3. PUT to edit Types:
@@ -427,3 +485,39 @@ This will depend on UserType of the User making the request.
 # Caveats
 
 Be sure that the Action String names are the same (same spelling, casing, etc) for both server and front end.
+
+# Error Handling
+
+The middlewares will execute _next(error)_ when there is an error or when authentication/authorization fails. You need to _use_ Express error handlers to properly catch these errors and return them as response.
+
+## Example:
+
+In server.js:
+
+```javascript
+app.use(notFound);
+app.use(errorHandler);
+```
+
+Error Handlers:
+
+```javascript
+const notFound = (req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  res.status(404);
+  next(error);
+};
+
+const errorHandler = (err, req, res, next) => {
+  const errorCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(errorCode);
+  const errorResponse = {
+    code: errorCode,
+    message: err.message,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+  };
+  res.json(errorResponse);
+};
+
+module.exports = { notFound, errorHandler };
+```

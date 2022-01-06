@@ -98,10 +98,12 @@ const deleteUser = async (req, res) => {
 const signIn = async (req, res, next) => {
   try {
     const { email: requestEmail, password } = req.body;
+    console.log(requestEmail);
+    console.log(password);
     const User = await UserModel.findOne({ email: requestEmail }).populate(
       "userType"
     );
-
+    console.log(User);
     if (!User) {
       throw "User not found.";
     }

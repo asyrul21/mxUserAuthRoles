@@ -7,7 +7,8 @@ const initialiseUserAuthRoles = async (
   superAdminObj,
   UserMongooseModel,
   defaultUserActions,
-  initialiseDbCb = async () => {}
+  initialiseDbCb = async () => {},
+  EventEmitter = null
 ) => {
   await initialiseDbCb();
   console.log("Initialising User Auth Roles...");
@@ -21,6 +22,9 @@ const initialiseUserAuthRoles = async (
     UserMongooseModel,
     superAdminType
   );
+  if (EventEmitter) {
+    EventEmitter.emit("initializationDone");
+  }
 };
 
 const connectRoutesAndUserModel = (

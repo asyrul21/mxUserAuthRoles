@@ -32,14 +32,13 @@ const connectMockDB = async () => {
   }
 };
 
-const initializeDatabase = async (env, eventEmitter) => {
+const initializeDatabase = async (env) => {
   console.log("Initializing database...");
   if (env === "test") {
     await connectMockDB();
   } else {
     await connectDB();
   }
-  eventEmitter.emit("DatabaseReady");
 };
 
 module.exports = { initializeDatabase };

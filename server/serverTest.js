@@ -31,7 +31,7 @@ app.use(express.json());
 // CLIENT's user routes setup
 const UserRoutes = require("./routes/userRoutes");
 app.get("/api/", (req, res) => {
-  res.send("User Role Service API is running");
+  res.send("Mongo-Express User Auth Roles Server Test API is running");
 });
 app.use("/api/users", UserRoutes);
 
@@ -41,9 +41,15 @@ const superAdminObject = {
   name: process.env.SUPER_ADMIN_NAME,
   password: process.env.SUPER_ADMIN_PASSWORD,
 };
-initialiseUserAuthRoles(superAdminObject, UserModel, defaultUserActions, () => {
-  initializeDatabase(process.env.NODE_ENV, EM);
-});
+initialiseUserAuthRoles(
+  superAdminObject,
+  UserModel,
+  defaultUserActions,
+  () => {
+    initializeDatabase(process.env.NODE_ENV);
+  },
+  EM
+);
 connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 
 // error middlewares
@@ -61,7 +67,7 @@ module.exports =
         )
       )
     : // wait for the database is loaded before starting listening
-      EM.on("databaseReady", () => {
+      EM.on("initializationDone", () => {
         server.listen(PORT, () => {
           console.log(
             `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
