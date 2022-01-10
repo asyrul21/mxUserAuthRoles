@@ -2,6 +2,8 @@
 
 [Buy me a Coffee](https://www.buymeacoffee.com/asyrulxpro)
 
+[Example Implementation](https://github.com/asyrul21/mxUserAuthRoles-example)
+
 A Modular Library to Manage User Roles and their responsibilities. It is meant to be used as a modular plugin to your existing MongoDB-Mongoose-Express application. It provides:
 
 1. Endpoints to manage (view, create, update, delete) User Types (Roles) and User Actions. User Types (such as Admin, Tester, Maintainer, etc) has a list of `allowedActions` that specify whether or not they are allowed to perform. Client's User Model can then implement the UserType as a property on their app.
