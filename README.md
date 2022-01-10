@@ -250,7 +250,7 @@ The library comes with the following middlewares:
 
   It requres 2 mandatory arguments:
 
-  - Client's Mongose User Mode
+  - Client's Mongoose User Model
   - JWT Secret
 
   There are another 2 optional arguments:
@@ -408,9 +408,13 @@ Depending on your API Route handle configured above, we will use the default `ap
    }
    ```
 
+   NOTE: If you update an action's name, all userTypes referencing the the updated action will be updated as well to reflect the updated action.
+
 4. DELETE to remove an Action:
 
    DELETE `api/userRoles/actions/:id`
+
+   NOTE: If you delete an action, all UserTypes referencing the deleted action will be updated to exclude that action.
 
 5. DELETE MANY to remove Actions:
 
@@ -423,6 +427,8 @@ Depending on your API Route handle configured above, we will use the default `ap
      actionIds: ["123", "234", "456"],
    }
    ```
+
+   NOTE: If you delete an action, all UserTypes referencing the deleted action will be updated to exclude that action.
 
 ## User Types (only for superAdmins and admins)
 
@@ -486,6 +492,8 @@ Depending on your API Route handle configured above, we will use the default `ap
 
    DELETE `api/userRoles/types/:id`
 
+   NOTE: If you delete a userType, all Users referencing the the deleted userType will fallback to type "Generic" which is non-Deletable.
+
 5. DELETE MANY to remove Actions:
 
    DELETE `api/userRoles/types/deleteMany`
@@ -497,6 +505,8 @@ Depending on your API Route handle configured above, we will use the default `ap
      typeIds: ["123", "234", "456"],
    }
    ```
+
+   NOTE: If you delete a userType, all Users referencing the the deleted userType will fallback to type "Generic" which is non-Deletable.
 
 ## Verify User is Allowed to Perform Action
 
