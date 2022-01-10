@@ -1,38 +1,12 @@
 # MX User Auth Roles
 
-[Buy me a Coffee Link]
+[Buy me a Coffee](https://www.buymeacoffee.com/asyrulxpro)
 
 A Modular Library to Manage User Roles and their responsibilities. It is meant to be used as a modular plugin to your existing MongoDB-Mongoose-Express application. It provides:
 
 1. Endpoints to manage (view, create, update, delete) User Types (Roles) and User Actions. User Types (such as Admin, Tester, Maintainer, etc) has a list of `allowedActions` that specify whether or not they are allowed to perform. Client's User Model can then implement the UserType as a property on their app.
 
-2. Middlewares that client can use to protect their app's Routes. These middlewares include:
-
-- _setupRequireLoginMiddleware_:
-
-  this to connect Client's User Model and JWT Secret to the Library. Example:
-
-  ```javascript
-  const requireLogin = setupRequireLoginMiddleware(
-    UserModel,
-    process.env.JWT_SECRET
-  );
-  router.route("/").get(requireLogin, mustBeAdmin, getUsers);
-  ```
-
-- _mustBeAdmin_ & _mustBeSuperAdmin_:
-
-  Endpoints exposed only to admin and superAdmin. These must be used after `requireLogin`
-
-- _isProfileOwner_:
-
-  Used if there is an update user profile endpoint, to check if the request sender is either the Owner of the profile, or an admin/superAdmin
-
-- _isAllowedToPerformAction_:
-
-  Check the user's `allowedActions` to see if the current endpoint's action is allowed for the user to perform.
-
-SEE _Sample Usage with Middlewares to Protect Routes_ below
+2. Middlewares that client can use to protect their app's Routes.
 
 # Pre-Requisites
 
@@ -53,7 +27,7 @@ Your app also needs to support the following infrastructure:
 
 1. JWT Authorization
 
-   Requests need to have a _header_ with key-value of {"authorization" : "Brearer <JWT token>"}
+   Requests need to have a _header_ with key-value of {"authorization" : "Bearer <JWT token>"}
 
 2. Your app should also have a mechanism to create a token. In this method, take note on the _identifier (ID) property_. For example:
 
@@ -85,7 +59,7 @@ Import `initialiseUserAuthRoles` and `connectRoutesAndUserModel` in your `server
 const {
   initialiseUserAuthRoles,
   connectRoutesAndUserModel,
-} = require("mxuserauthroles");
+} = require("mx-user-auth-roles");
 ```
 
 ## initialiseUserAuthRoles
@@ -217,7 +191,7 @@ Optional parameters:
 const {
   initialiseUserAuthRoles,
   connectRoutesAndUserModel,
-} = require("mxuserauthroles");
+} = require("mx-user-authroles");
 const UserModel = require("./models/User");
 const defaultUserActions = require("./defaultUserActions.json");
 
@@ -245,19 +219,62 @@ initialiseUserAuthRoles(
 connectRoutesAndUserModel(app, UserModel, process.env.JWT_SECRET);
 ```
 
-# Sample Usage with Middlewares to Protect Routes
+<br/>
+
+# Middlewares
+
+The library comes with the following middlewares:
+
+- _setupRequireLoginMiddleware_:
+
+  this to connect Client's User Model and JWT Secret to the Library. Example:
+
+  ```javascript
+  const requireLogin = setupRequireLoginMiddleware(
+    UserModel,
+    process.env.JWT_SECRET
+  );
+  router.route("/").get(requireLogin, mustBeAdmin, getUsers);
+  ```
+
+  It requres 2 mandatory arguments:
+
+  - Client's Mongose User Mode
+  - JWT Secret
+
+  There are another 2 optional arguments:
+
+  - _jwtIDKey_: Your ID Prop used in your JWT's `createToken`. Default: "id",
+
+  - _userPasswordProp_: The property for User Password fo your User Model. Default = "password"
+
+- _mustBeAdmin_ & _mustBeSuperAdmin_:
+
+  Endpoints exposed only to admin and superAdmin. These must be used after `requireLogin`
+
+- _isProfileOwner_:
+
+  Used if there is an update user profile endpoint, to check if the request sender is either the Owner of the profile, or an admin/superAdmin
+
+- _isAllowedToPerformAction_:
+
+  Check the user's `allowedActions` to see if the current endpoint's action is allowed for the user to perform.
+
+  It takes in a Action String as argument.
+
+## Sample Usage with Middlewares to Protect Routes
 
 1. Import middlewares in your routes:
 
-```javascript
-const {
-  mustBeAdmin,
-  mustBeSuperAdmin,
-  isAllowedToPerformAction,
-  setupRequireLoginMiddleware,
-  isProfileOwner,
-} = require("mxuserauthroles");
-```
+   ```javascript
+   const {
+     mustBeAdmin,
+     mustBeSuperAdmin,
+     isAllowedToPerformAction,
+     setupRequireLoginMiddleware,
+     isProfileOwner,
+   } = require("mx-user-auth-roles");
+   ```
 
 2. Setup the requiredLogin method.
 
