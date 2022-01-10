@@ -158,7 +158,7 @@ const {
          });
    ```
 
-## `connectRoutesAndUserModel`
+## connectRoutesAndUserModel
 
 `connectRoutesAndUserModel` takes three mandatory parameters:
 
@@ -202,6 +202,15 @@ const EM = new events.EventEmitter();
 // express
 const app = express();
 
+// body parser
+app.use(express.json());
+
+// CLIENT's user routes setup
+const UserRoutes = require("./routes/userRoutes");
+app.use("/api/users", UserRoutes);
+// ... every other routes ...
+
+// initialising library and connecting routes
 const superAdminObject = {
   email: process.env.SUPER_ADMIN_ID, // make sure the primary key/prop of your user model is defined FIRST
   email: process.env.SUPER_ADMIN_PASSWORD,
