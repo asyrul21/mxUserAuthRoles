@@ -12,6 +12,22 @@
   },
   "author": "Asyrul Ahmad",
   "license": "ISC",
+  "keywords": [
+    "authentication",
+    "auth",
+    "jwt",
+    "user roles",
+    "roles",
+    "user acess",
+    "manage",
+    "types",
+    "user",
+    "middlewares",
+    "protect",
+    "routes",
+    "roles",
+    "responsibilities"
+  ],
   "devDependencies": {
     "chai": "^4.3.4",
     "chai-http": "^4.3.0",
