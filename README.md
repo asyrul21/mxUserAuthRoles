@@ -59,7 +59,7 @@ Import `initialiseUserAuthRoles` and `connectRoutesAndUserModel` in your `server
 const {
   initialiseUserAuthRoles,
   connectRoutesAndUserModel,
-} = require("mx-user-auth-roles");
+} = require("mxuserauthroles");
 ```
 
 ## initialiseUserAuthRoles
@@ -191,7 +191,7 @@ Optional parameters:
 const {
   initialiseUserAuthRoles,
   connectRoutesAndUserModel,
-} = require("mx-user-authroles");
+} = require("mxuserauthroles");
 const UserModel = require("./models/User");
 const defaultUserActions = require("./defaultUserActions.json");
 
@@ -282,7 +282,7 @@ The library comes with the following middlewares:
      isAllowedToPerformAction,
      setupRequireLoginMiddleware,
      isProfileOwner,
-   } = require("mx-user-auth-roles");
+   } = require("mxuserauthroles");
    ```
 
 2. Setup the requiredLogin method.
