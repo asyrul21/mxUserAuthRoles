@@ -1,6 +1,6 @@
 {
   "name": "mxuserauthroles",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "A modular approach to managing different user types and responsibilities. The library provides endpoints and middlewares to protect routes based on user roles.",
   "main": "index.js",
   "scripts": {
