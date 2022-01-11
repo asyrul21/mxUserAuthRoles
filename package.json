@@ -11,7 +11,7 @@
     "dev": "npm run server"
   },
   "author": "Asyrul Ahmad",
-  "license": "ISC",
+  "license": "MIT",
   "keywords": [
     "authentication",
     "auth",
